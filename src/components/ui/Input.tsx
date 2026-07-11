@@ -12,13 +12,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-xs font-semibold text-brand-dark-grey uppercase tracking-wider mb-1.5">
+          <label className="block text-[11px] font-bold text-stone-500 tracking-wide mb-1.5">
             {label}
           </label>
         )}
-        <div className="relative rounded-lg shadow-sm">
+        <div className="relative rounded-xl">
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-dark-grey">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
               {leftIcon}
             </div>
           )}
@@ -26,9 +26,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             type={type}
             ref={ref}
             className={clsx(
-              'block w-full rounded-lg border border-brand-border py-2.5 text-sm transition-all duration-150 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none placeholder-gray-400 text-brand-text bg-white',
-              leftIcon ? 'pl-10' : 'pl-3.5',
-              error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-brand-border',
+              'block w-full rounded-xl border border-stone-200 py-2.5 text-xs transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none placeholder-stone-400 text-stone-850 bg-white hover:border-stone-300',
+              leftIcon ? 'pl-10' : 'pl-4',
+              error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-stone-200',
               className
             )}
             {...props}
@@ -53,25 +53,33 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-xs font-semibold text-brand-dark-grey uppercase tracking-wider mb-1.5">
+          <label className="block text-[11px] font-bold text-stone-500 tracking-wide mb-1.5">
             {label}
           </label>
         )}
-        <select
-          ref={ref}
-          className={clsx(
-            'block w-full rounded-lg border border-brand-border py-2.5 px-3.5 text-sm transition-all duration-150 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none bg-white text-brand-text',
-            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-brand-border',
-            className
-          )}
-          {...props}
-        >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative rounded-xl">
+          <select
+            ref={ref}
+            className={clsx(
+              'block w-full rounded-xl border border-stone-200 py-2.5 px-4 text-xs transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none bg-white text-stone-850 hover:border-stone-300 appearance-none cursor-pointer',
+              error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-stone-200',
+              className
+            )}
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 14px center',
+              paddingRight: '36px'
+            }}
+            {...props}
+          >
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
     );
@@ -90,15 +98,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-xs font-semibold text-brand-dark-grey uppercase tracking-wider mb-1.5">
+          <label className="block text-[11px] font-bold text-stone-500 tracking-wide mb-1.5">
             {label}
           </label>
         )}
         <textarea
           ref={ref}
           className={clsx(
-            'block w-full rounded-lg border border-brand-border py-2.5 px-3.5 text-sm transition-all duration-150 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none bg-white text-brand-text',
-            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-brand-border',
+            'block w-full rounded-xl border border-stone-200 py-2.5 px-4 text-xs transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none bg-white text-stone-850 hover:border-stone-300',
+            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-stone-200',
             className
           )}
           {...props}
