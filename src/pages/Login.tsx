@@ -12,7 +12,7 @@ export const Login: React.FC = () => {
   const { login, forgotPassword } = useAuth();
   const navigate = useNavigate();
 
-  const [portal, setPortal] = useState<'admin' | 'employee' | 'client'>('admin');
+  const portal = 'admin';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
