@@ -5,7 +5,7 @@ import type { Client } from '../../types';
 import { Card, CardBody } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { Input, Select, Textarea } from '../../components/ui/Input';
+import { Input, Select } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -18,8 +18,6 @@ import {
   HiOutlineEye,
   HiOutlineEnvelope,
   HiOutlinePhone,
-  HiOutlineIdentification,
-  HiOutlineDocumentText,
   HiOutlineCreditCard
 } from 'react-icons/hi2';
 
@@ -221,7 +219,6 @@ export const ClientManagement: React.FC = () => {
                 <tr className="bg-brand-light-grey border-b border-brand-border text-brand-dark-grey font-bold uppercase tracking-wider">
                   <th className="px-6 py-4">Client Portfolio</th>
                   <th className="px-6 py-4">Company Details</th>
-                  <th className="px-6 py-4">GST / Tax ID</th>
                   <th className="px-6 py-4">Contact Channels</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -243,10 +240,7 @@ export const ClientManagement: React.FC = () => {
                       <p className="font-semibold text-brand-text">{client.companyName}</p>
                       <p className="text-[10px] text-brand-dark-grey mt-0.5">PIN: {client.pincode}</p>
                     </td>
-                    <td className="px-6 py-4 font-mono font-bold text-brand-text">
-                      {client.gstNumber || 'N/A'}
-                      <span className="block text-[10px] text-brand-dark-grey font-sans font-medium mt-0.5">PAN: {client.panNumber || 'N/A'}</span>
-                    </td>
+
                     <td className="px-6 py-4">
                       <div className="space-y-0.5">
                         <span className="flex items-center gap-1.5 text-brand-dark-grey font-medium">
@@ -291,10 +285,7 @@ export const ClientManagement: React.FC = () => {
             <Input label="Company Name *" placeholder="L&T Construction Projects" required value={formCompany} onChange={e => setFormCompany(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="GSTIN Number" placeholder="27AADCL9876R1ZV" value={formGst} onChange={e => setFormGst(e.target.value)} />
-            <Input label="PAN Number" placeholder="AADCL9876R" value={formPan} onChange={e => setFormPan(e.target.value)} />
-          </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Phone Number *" placeholder="+91 99887 76655" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
@@ -309,12 +300,7 @@ export const ClientManagement: React.FC = () => {
             <Input label="Pincode" placeholder="400001" value={formPincode} onChange={e => setFormPincode(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Compliance ID Proof Name" placeholder="GST_Certificate.pdf" value={formIdProof} onChange={e => setFormIdProof(e.target.value)} />
-            <Input label="Avatar Image URL" placeholder="https://unsplash.com/..." value={formImage} onChange={e => setFormImage(e.target.value)} />
-          </div>
 
-          <Textarea label="Client Specific Terms/Notes" placeholder="Premium enterprise client. Requires special discount rates..." value={formNotes} onChange={e => setFormNotes(e.target.value)} />
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-brand-border">
             <Button variant="outline" size="sm" type="button" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
@@ -331,10 +317,7 @@ export const ClientManagement: React.FC = () => {
             <Input label="Company Name *" required value={formCompany} onChange={e => setFormCompany(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="GSTIN Number" value={formGst} onChange={e => setFormGst(e.target.value)} />
-            <Input label="PAN Number" value={formPan} onChange={e => setFormPan(e.target.value)} />
-          </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Phone Number *" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
@@ -349,7 +332,7 @@ export const ClientManagement: React.FC = () => {
             <Input label="Pincode" value={formPincode} onChange={e => setFormPincode(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <Select
               label="Account Access Status *"
               options={[
@@ -359,10 +342,7 @@ export const ClientManagement: React.FC = () => {
               value={formStatus}
               onChange={e => setFormStatus(e.target.value as any)}
             />
-            <Input label="Avatar Image URL" value={formImage} onChange={e => setFormImage(e.target.value)} />
           </div>
-
-          <Textarea label="Client Specific Notes" value={formNotes} onChange={e => setFormNotes(e.target.value)} />
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-brand-border">
             <Button variant="outline" size="sm" type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
@@ -390,14 +370,7 @@ export const ClientManagement: React.FC = () => {
 
             {/* Profile fields details grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6 bg-brand-light-grey p-4 border border-brand-border rounded-xl">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">GSTIN Tax Registration</span>
-                <p className="font-bold text-brand-text mt-0.5">{selectedClient.gstNumber || 'N/A'}</p>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">PAN Tax Registration</span>
-                <p className="font-bold text-brand-text mt-0.5">{selectedClient.panNumber || 'N/A'}</p>
-              </div>
+
               <div>
                 <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Pincode / Location</span>
                 <p className="font-bold text-brand-text mt-0.5">{selectedClient.pincode} • {selectedClient.city}</p>
@@ -416,19 +389,7 @@ export const ClientManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Client specific documents */}
-            <div>
-              <h4 className="font-bold text-xs text-brand-text border-b border-brand-border pb-1.5 mb-2.5 uppercase tracking-wider flex items-center gap-2">
-                <HiOutlineIdentification className="h-4 w-4 text-brand-dark-grey" /> KYC & Legal Documents
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedClient.documents.map((doc, idx) => (
-                  <span key={idx} className="flex items-center gap-1.5 bg-brand-light-grey border border-brand-border px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-text hover:bg-brand-border cursor-pointer transition-colors">
-                    <HiOutlineDocumentText className="h-4 w-4 text-brand-dark-grey" /> {doc}
-                  </span>
-                ))}
-              </div>
-            </div>
+
 
             {/* Tabs for Rental & Payments */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -483,11 +444,7 @@ export const ClientManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Notes */}
-            <div>
-              <span className="text-[10px] font-bold text-brand-dark-grey uppercase tracking-widest block mb-1">Administrative Notes</span>
-              <p className="p-3 bg-orange-50 border border-orange-100 rounded-lg text-xs leading-relaxed text-brand-text font-medium">{selectedClient.notes || 'No administrative notes entered.'}</p>
-            </div>
+
 
             <div className="flex justify-end pt-4 border-t border-brand-border">
               <Button variant="primary" size="sm" onClick={() => setIsDetailModalOpen(false)}>Close Portfolio</Button>
