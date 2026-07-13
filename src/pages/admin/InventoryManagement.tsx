@@ -33,6 +33,7 @@ export const InventoryManagement: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [previewFullscreenImage, setPreviewFullscreenImage] = useState<string | null>(null);
 
   // Form States
   const [formName, setFormName] = useState('');
@@ -69,6 +70,17 @@ export const InventoryManagement: React.FC = () => {
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleOpenAdd = () => {
     setFormName('');
@@ -344,21 +356,57 @@ export const InventoryManagement: React.FC = () => {
             <Input label="Serial Number *" placeholder="e.g. CAT-SN-998877" required value={formSerial} onChange={e => setFormSerial(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input label="Purchase Date" type="date" value={formPurchaseDate} onChange={e => setFormPurchaseDate(e.target.value)} />
-            <Input label="Purchase Price (INR)" type="number" placeholder="6500000" value={formPurchasePrice || ''} onChange={e => setFormPurchasePrice(Number(e.target.value))} />
-            <Input label="Current Location Yard" placeholder="Panvel Yard A" value={formLocation} onChange={e => setFormLocation(e.target.value)} />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Input label="Daily Rent Rate (INR) *" type="number" placeholder="8500" required value={formPriceDay || ''} onChange={e => setFormPriceDay(Number(e.target.value))} />
-            <Input label="Weekly Rent Rate (INR)" type="number" placeholder="55000" value={formPriceWeek || ''} onChange={e => setFormPriceWeek(Number(e.target.value))} />
-            <Input label="Monthly Rent Rate (INR)" type="number" placeholder="210000" value={formPriceMonth || ''} onChange={e => setFormPriceMonth(Number(e.target.value))} />
-            <Input label="Security Deposit (INR) *" type="number" placeholder="50000" required value={formDeposit || ''} onChange={e => setFormDeposit(Number(e.target.value))} />
-          </div>
 
-          <Input label="Equipment Image URL" placeholder="https://unsplash.com/..." value={formImage} onChange={e => setFormImage(e.target.value)} />
           <Textarea label="Asset Description" placeholder="Detailed specifications, attachments, driver requirements..." value={formDescription} onChange={e => setFormDescription(e.target.value)} />
+          
+          <div className="space-y-1.5 text-left">
+            <span className="block font-semibold text-brand-text">Equipment Image</span>
+            <div className="flex items-center gap-4">
+              {formImage ? (
+                <div className="relative group shrink-0">
+                  <img
+                    src={formImage}
+                    alt="Preview"
+                    className="h-20 w-24 object-cover rounded-lg border border-brand-border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity"
+                    onClick={() => setPreviewFullscreenImage(formImage)}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormImage('');
+                    }}
+                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors shadow"
+                    title="Remove image"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="h-20 w-24 rounded-lg border border-dashed border-brand-border bg-brand-light-grey flex items-center justify-center text-brand-dark-grey shrink-0">
+                  <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+              
+              <label className="flex-1 cursor-pointer">
+                <div className="border border-brand-border hover:border-primary/50 rounded-xl px-4 py-3 bg-white text-center hover:bg-brand-light-grey/30 transition-all">
+                  <span className="block font-semibold text-brand-text text-xs">Choose image file</span>
+                  <span className="block text-[10px] text-brand-dark-grey mt-0.5">Supports PNG, JPG, GIF (Max 5MB)</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-brand-border">
             <Button variant="outline" size="sm" type="button" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
@@ -381,33 +429,69 @@ export const InventoryManagement: React.FC = () => {
             <Input label="Serial Number *" required value={formSerial} onChange={e => setFormSerial(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input label="Purchase Date" type="date" value={formPurchaseDate} onChange={e => setFormPurchaseDate(e.target.value)} />
-            <Input label="Purchase Price (INR)" type="number" value={formPurchasePrice || ''} onChange={e => setFormPurchasePrice(Number(e.target.value))} />
-            <Select
-              label="Equipment Operational Status *"
-              options={[
-                { label: 'Available', value: 'Available' },
-                { label: 'Rented', value: 'Rented' },
-                { label: 'Maintenance', value: 'Maintenance' },
-                { label: 'Reserved', value: 'Reserved' },
-                { label: 'Lost', value: 'Lost' },
-                { label: 'Damaged', value: 'Damaged' }
-              ]}
-              value={formStatus}
-              onChange={e => setFormStatus(e.target.value as InventoryStatus)}
-            />
-          </div>
+          <Select
+            label="Equipment Operational Status *"
+            options={[
+              { label: 'Available', value: 'Available' },
+              { label: 'Rented', value: 'Rented' },
+              { label: 'Maintenance', value: 'Maintenance' },
+              { label: 'Reserved', value: 'Reserved' },
+              { label: 'Lost', value: 'Lost' },
+              { label: 'Damaged', value: 'Damaged' }
+            ]}
+            value={formStatus}
+            onChange={e => setFormStatus(e.target.value as InventoryStatus)}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Input label="Daily Rent (INR) *" type="number" required value={formPriceDay || ''} onChange={e => setFormPriceDay(Number(e.target.value))} />
-            <Input label="Weekly Rent (INR)" type="number" value={formPriceWeek || ''} onChange={e => setFormPriceWeek(Number(e.target.value))} />
-            <Input label="Monthly Rent (INR)" type="number" value={formPriceMonth || ''} onChange={e => setFormPriceMonth(Number(e.target.value))} />
-            <Input label="Security Deposit (INR) *" type="number" required value={formDeposit || ''} onChange={e => setFormDeposit(Number(e.target.value))} />
-          </div>
-
-          <Input label="Equipment Image URL" value={formImage} onChange={e => setFormImage(e.target.value)} />
           <Textarea label="Asset Description" value={formDescription} onChange={e => setFormDescription(e.target.value)} />
+          
+          <div className="space-y-1.5 text-left">
+            <span className="block font-semibold text-brand-text">Equipment Image</span>
+            <div className="flex items-center gap-4">
+              {formImage ? (
+                <div className="relative group shrink-0">
+                  <img
+                    src={formImage}
+                    alt="Preview"
+                    className="h-20 w-24 object-cover rounded-lg border border-brand-border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity"
+                    onClick={() => setPreviewFullscreenImage(formImage)}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormImage('');
+                    }}
+                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors shadow"
+                    title="Remove image"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="h-20 w-24 rounded-lg border border-dashed border-brand-border bg-brand-light-grey flex items-center justify-center text-brand-dark-grey shrink-0">
+                  <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+              
+              <label className="flex-1 cursor-pointer">
+                <div className="border border-brand-border hover:border-primary/50 rounded-xl px-4 py-3 bg-white text-center hover:bg-brand-light-grey/30 transition-all">
+                  <span className="block font-semibold text-brand-text text-xs">Choose image file</span>
+                  <span className="block text-[10px] text-brand-dark-grey mt-0.5">Supports PNG, JPG, GIF (Max 5MB)</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-brand-border">
             <Button variant="outline" size="sm" type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
@@ -548,6 +632,30 @@ export const InventoryManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {previewFullscreenImage && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setPreviewFullscreenImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl p-2 overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <img
+              src={previewFullscreenImage}
+              alt="Fullscreen Preview"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl"
+            />
+            <button
+              onClick={() => setPreviewFullscreenImage(null)}
+              className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-2.5 transition-colors cursor-pointer shadow-md"
+              type="button"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
