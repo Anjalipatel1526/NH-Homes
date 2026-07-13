@@ -12,7 +12,7 @@ export const Login: React.FC = () => {
   const { login, forgotPassword } = useAuth();
   const navigate = useNavigate();
 
-  const portal = 'admin';
+  const [portal, setPortal] = useState<'admin' | 'client'>('admin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,8 +35,12 @@ export const Login: React.FC = () => {
     try {
       const success = await login(username, password, portal, rememberMe);
       if (success) {
-        toast.success(`Welcome back! Logged into ${portal} portal.`);
-        navigate(`/${portal}/dashboard`);
+        toast.success(`Welcome back! Logged into ${portal === 'admin' ? 'Admin' : 'Client'} portal.`);
+        if (portal === 'client') {
+          navigate('/client/inventory');
+        } else {
+          navigate(`/${portal}/dashboard`);
+        }
       } else {
         toast.error('Invalid username or password for selected portal');
       }
@@ -67,6 +71,32 @@ export const Login: React.FC = () => {
   const loginFormContent = (
     <>
 
+
+      {/* Portal Tab Selection */}
+      <div className="flex bg-stone-100 p-1 rounded-xl mb-5">
+        <button
+          type="button"
+          onClick={() => setPortal('admin')}
+          className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all ${
+            portal === 'admin'
+              ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+              : 'text-stone-500 hover:text-stone-850'
+          }`}
+        >
+          Admin Portal
+        </button>
+        <button
+          type="button"
+          onClick={() => setPortal('client')}
+          className={`flex-grow py-2 text-xs font-bold rounded-lg transition-all ${
+            portal === 'client'
+              ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+              : 'text-stone-500 hover:text-stone-850'
+          }`}
+        >
+          Client Login
+        </button>
+      </div>
 
       {/* Login Form */}
       <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -163,9 +193,11 @@ export const Login: React.FC = () => {
         />
 
         {/* Heading */}
-        <div className="relative z-10 flex flex-col items-center mb-8">
+        <div className="relative z-10 flex flex-col items-center mb-8 cursor-pointer select-none" onClick={() => setPortal(portal === 'admin' ? 'client' : 'admin')}>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Login</h1>
-          <p className="text-xs text-white/70 font-medium mt-1">NH Homes Civil Rentals Portal</p>
+          <p className="text-xs text-white/70 font-medium mt-1">
+            {portal === 'client' ? 'NH Homes / Client Login' : 'NH Homes Civil Rentals Portal'}
+          </p>
         </div>
 
         {/* Login Card */}
@@ -208,13 +240,15 @@ export const Login: React.FC = () => {
 
           {/* Top: Logo */}
           <div className="relative z-10 p-10 lg:p-14">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => setPortal(portal === 'admin' ? 'client' : 'admin')}>
               <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
                 <span className="font-extrabold text-lg text-white tracking-wider block leading-none">NH HOMES</span>
-                <span className="text-[10px] font-bold text-orange-200 tracking-widest uppercase leading-none">CIVIL EQUIPMENT RENTAL</span>
+                <span className="text-[10px] font-bold text-orange-200 tracking-widest uppercase leading-none">
+                  {portal === 'client' ? 'CLIENT LOGIN' : 'CIVIL EQUIPMENT RENTAL'}
+                </span>
               </div>
             </div>
           </div>
@@ -246,7 +280,7 @@ export const Login: React.FC = () => {
             <div className="mb-8">
               <h2 className="text-2xl font-extrabold text-stone-900 tracking-tight">Welcome Back</h2>
               <p className="text-sm text-stone-500 mt-1.5 font-medium">
-                Select your portal and sign in to continue.
+                {portal === 'client' ? 'Sign in to the Client Portal.' : 'Select your portal and sign in to continue.'}
               </p>
             </div>
 

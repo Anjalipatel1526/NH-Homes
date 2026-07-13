@@ -42,6 +42,7 @@ export interface Client {
   notes: string;
   profileImage?: string;
   documents: string[]; // Document URLs/names
+  password?: string;
   rentalHistory: {
     rentalNumber: string;
     startDate: string;

@@ -43,6 +43,10 @@ const IndexRedirect: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
   
+  if (role === 'client') {
+    return <Navigate to="/client/inventory" replace />;
+  }
+  
   return <Navigate to={`/${role}/dashboard`} replace />;
 };
 
@@ -159,6 +163,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['client']}>
                     <ClientDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="client/inventory"
+                element={
+                  <ProtectedRoute allowedRoles={['client']}>
+                    <InventoryManagement />
                   </ProtectedRoute>
                 }
               />

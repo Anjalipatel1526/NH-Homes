@@ -94,6 +94,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
           entityId: 'clt-2'
         };
+      } else {
+        const localClients = localStorage.getItem('nh_homes_db_v2_clients');
+        if (localClients) {
+          const clientsList = JSON.parse(localClients);
+          const matchedClient = clientsList.find(
+            (c: any) => c.email.toLowerCase() === username.toLowerCase() && c.password === password
+          );
+          if (matchedClient) {
+            authenticatedUser = {
+              id: `user-${matchedClient.id}`,
+              username: matchedClient.email.split('@')[0],
+              email: matchedClient.email,
+              role: 'client',
+              name: matchedClient.name,
+              profileImage: matchedClient.profileImage,
+              entityId: matchedClient.id
+            };
+          }
+        }
       }
     }
 
