@@ -480,7 +480,7 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   className="flex items-center rounded-full bg-white p-1 shadow-sm border border-stone-150 cursor-pointer hover:shadow-md transition-all relative"
                 >
-                  {user?.profileImage ? (
+                  {user?.profileImage && !user.profileImage.includes('photo-1507003211169-0a1dd7228f2d') ? (
                     <img src={user.profileImage} className="h-9 w-9 rounded-full bg-orange-105 object-cover border border-stone-100" />
                   ) : (
                     <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center text-white text-sm font-bold shrink-0">

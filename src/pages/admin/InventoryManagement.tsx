@@ -303,7 +303,7 @@ export const InventoryManagement: React.FC = () => {
                   <th className="px-6 py-4">Thumbnail</th>
                   <th className="px-6 py-4">Equipment Name</th>
                   <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Day Rent Rate</th>
+                  {role !== 'client' && <th className="px-6 py-4">Day Rent Rate</th>}
                   <th className="px-6 py-4">Current Yard</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -329,7 +329,7 @@ export const InventoryManagement: React.FC = () => {
                       <span className="block text-[10px] text-brand-dark-grey font-medium mt-0.5">{item.brand} • {item.model}</span>
                     </td>
                     <td className="px-6 py-4 text-brand-dark-grey font-medium">{item.category}</td>
-                    <td className="px-6 py-4 font-bold text-primary">₹{item.rentalPriceDay.toLocaleString('en-IN')}/day</td>
+                    {role !== 'client' && <td className="px-6 py-4 font-bold text-primary">₹{item.rentalPriceDay.toLocaleString('en-IN')}/day</td>}
                     <td className="px-6 py-4 text-brand-text font-medium">{item.currentLocation}</td>
                     <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                     <td className="px-6 py-4 text-right">
@@ -575,11 +575,13 @@ export const InventoryManagement: React.FC = () => {
             </div>
 
             {/* Spec grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-brand-light-grey p-4 border border-brand-border rounded-xl">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Daily Rent</span>
-                <p className="font-extrabold text-primary text-sm mt-0.5">₹{selectedItem.rentalPriceDay.toLocaleString('en-IN')}</p>
-              </div>
+            <div className={`grid gap-4 bg-brand-light-grey p-4 border border-brand-border rounded-xl ${role === 'client' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
+              {role !== 'client' && (
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Daily Rent</span>
+                  <p className="font-extrabold text-primary text-sm mt-0.5">₹{selectedItem.rentalPriceDay.toLocaleString('en-IN')}</p>
+                </div>
+              )}
               <div>
                 <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Weekly Rent</span>
                 <p className="font-extrabold text-brand-text text-sm mt-0.5">₹{selectedItem.rentalPriceWeek.toLocaleString('en-IN')}</p>

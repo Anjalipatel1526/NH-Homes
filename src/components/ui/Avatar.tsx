@@ -29,9 +29,11 @@ export const Avatar: React.FC<AvatarProps> = ({
     xl: 'h-20 w-20 text-xl font-bold'
   };
 
+  const isDefaultImage = src?.includes('photo-1507003211169-0a1dd7228f2d');
+
   return (
     <div className={clsx('relative inline-block', className)}>
-      {src ? (
+      {src && !isDefaultImage ? (
         <img
           src={src}
           alt={name}

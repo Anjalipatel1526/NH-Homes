@@ -77,7 +77,7 @@ export const ClientManagement: React.FC = () => {
     setFormIdProof('GST_Certificate.pdf');
     setFormNotes('');
     setFormStatus('Active');
-    setFormImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150');
+    setFormImage('');
     setFormPassword('');
     setShowPassword(false);
     setIsAddModalOpen(true);
