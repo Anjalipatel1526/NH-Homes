@@ -23,7 +23,7 @@ import {
   Bell,
   Search,
   Clock,
-  ShoppingBag
+  ShoppingCart
 } from 'lucide-react';
 import {
   HiOutlineBars3,
@@ -144,10 +144,8 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
       { path: '/employee/assigned', name: 'Assigned Rentals', icon: Clock }
     ],
     client: [
-      { path: '/client/dashboard', name: 'Dashboard', icon: Home },
-      { path: '/client/rentals', name: 'Request Rental', icon: ShoppingBag },
-      { path: '/client/history', name: 'Active Rentals', icon: Clock },
-      { path: '/client/invoices', name: 'Invoices & Dues', icon: FileText }
+      { path: '/client/inventory', name: 'Inventory Management', icon: Briefcase },
+      { path: '/client/cart', name: 'Add to Cart', icon: ShoppingCart }
     ]
   };
 

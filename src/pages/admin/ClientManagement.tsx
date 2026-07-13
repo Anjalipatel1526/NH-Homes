@@ -16,6 +16,7 @@ import {
   HiOutlinePencilSquare,
   HiOutlineTrash,
   HiOutlineEye,
+  HiOutlineEyeSlash,
   HiOutlineEnvelope,
   HiOutlinePhone,
   HiOutlineCreditCard
@@ -50,6 +51,8 @@ export const ClientManagement: React.FC = () => {
   const [formNotes, setFormNotes] = useState('');
   const [formStatus, setFormStatus] = useState<'Active' | 'Inactive'>('Active');
   const [formImage, setFormImage] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Filtering Logic
   const filteredClients = clients.filter(c => {
@@ -74,7 +77,9 @@ export const ClientManagement: React.FC = () => {
     setFormIdProof('GST_Certificate.pdf');
     setFormNotes('');
     setFormStatus('Active');
-    setFormImage('');
+    setFormImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150');
+    setFormPassword('');
+    setShowPassword(false);
     setIsAddModalOpen(true);
   };
 
@@ -100,7 +105,8 @@ export const ClientManagement: React.FC = () => {
       status: formStatus,
       notes: formNotes,
       profileImage: formImage,
-      documents: ['PAN_Card.pdf', 'GST_Certificate.pdf']
+      documents: ['PAN_Card.pdf', 'GST_Certificate.pdf'],
+      password: formPassword
     });
 
     logActivity(user?.name || 'Admin', 'admin', 'Created Client', 'create', `Created profile for client ${formName} (${formCompany})`);
@@ -124,6 +130,8 @@ export const ClientManagement: React.FC = () => {
     setFormNotes(client.notes);
     setFormStatus(client.status);
     setFormImage(client.profileImage || '');
+    setFormPassword(client.password || '');
+    setShowPassword(false);
     setIsEditModalOpen(true);
   };
 
@@ -145,7 +153,8 @@ export const ClientManagement: React.FC = () => {
       idProof: formIdProof,
       notes: formNotes,
       status: formStatus,
-      profileImage: formImage
+      profileImage: formImage,
+      password: formPassword
     });
 
     logActivity(user?.name || 'Admin', 'admin', 'Updated Client', 'update', `Updated contact details for client ${formName}`);
@@ -287,9 +296,30 @@ export const ClientManagement: React.FC = () => {
 
 
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input label="Phone Number *" placeholder="+91 99887 76655" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
             <Input label="Email Address *" type="email" placeholder="amit.patel@lntecc.com" required value={formEmail} onChange={e => setFormEmail(e.target.value)} />
+            <Input
+              label="Account Password *"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              required
+              value={formPassword}
+              onChange={e => setFormPassword(e.target.value)}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-stone-400 hover:text-stone-600 focus:outline-none cursor-pointer flex items-center justify-center p-1"
+                >
+                  {showPassword ? (
+                    <HiOutlineEyeSlash className="h-4.5 w-4.5" />
+                  ) : (
+                    <HiOutlineEye className="h-4.5 w-4.5" />
+                  )}
+                </button>
+              }
+            />
           </div>
 
           <Input label="Registered Billing Address" placeholder="L&T House, Ballard Estate, Fort" value={formAddress} onChange={e => setFormAddress(e.target.value)} />
@@ -319,9 +349,29 @@ export const ClientManagement: React.FC = () => {
 
 
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input label="Phone Number *" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
             <Input label="Email Address *" type="email" required value={formEmail} onChange={e => setFormEmail(e.target.value)} />
+            <Input
+              label="Account Password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={formPassword}
+              onChange={e => setFormPassword(e.target.value)}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-stone-400 hover:text-stone-600 focus:outline-none cursor-pointer flex items-center justify-center p-1"
+                >
+                  {showPassword ? (
+                    <HiOutlineEyeSlash className="h-4.5 w-4.5" />
+                  ) : (
+                    <HiOutlineEye className="h-4.5 w-4.5" />
+                  )}
+                </button>
+              }
+            />
           </div>
 
           <Input label="Registered Billing Address" value={formAddress} onChange={e => setFormAddress(e.target.value)} />

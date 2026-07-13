@@ -21,7 +21,7 @@ import {
 
 export const InventoryManagement: React.FC = () => {
   const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem, logActivity } = useData();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -223,9 +223,11 @@ export const InventoryManagement: React.FC = () => {
           <h1 className="text-lg font-extrabold text-brand-text tracking-tight m-0">Inventory Registry</h1>
           <p className="text-xs text-brand-dark-grey mt-0.5">Manage heavy equipment, power tools, scaffolding, and structural items.</p>
         </div>
-        <Button variant="primary" size="sm" onClick={handleOpenAdd} leftIcon={<HiOutlinePlusCircle />}>
-          Add New Equipment
-        </Button>
+        {role !== 'client' && (
+          <Button variant="primary" size="sm" onClick={handleOpenAdd} leftIcon={<HiOutlinePlusCircle />}>
+            Add New Equipment
+          </Button>
+        )}
       </div>
 
       {/* Filter panel */}
@@ -335,12 +337,16 @@ export const InventoryManagement: React.FC = () => {
                         <Button variant="ghost" size="sm" onClick={() => handleOpenDetail(item)} className="p-1.5" title="View Details">
                           <HiOutlineEye className="h-4.5 w-4.5 text-brand-dark-grey" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(item)} className="p-1.5" title="Edit Item">
-                          <HiOutlinePencilSquare className="h-4.5 w-4.5 text-brand-dark-grey" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteTrigger(item)} className="p-1.5 text-red-600 hover:text-red-700" title="Delete Item">
-                          <HiOutlineTrash className="h-4.5 w-4.5" />
-                        </Button>
+                        {role !== 'client' && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(item)} className="p-1.5" title="Edit Item">
+                              <HiOutlinePencilSquare className="h-4.5 w-4.5 text-brand-dark-grey" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteTrigger(item)} className="p-1.5 text-red-600 hover:text-red-700" title="Delete Item">
+                              <HiOutlineTrash className="h-4.5 w-4.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
