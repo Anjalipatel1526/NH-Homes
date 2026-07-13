@@ -5,6 +5,7 @@ interface AuthContextType {
   user: User | null;
   role: UserRole | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (username: string, password: string, portal: UserRole, rememberMe: boolean) => Promise<boolean>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<boolean>;
@@ -17,17 +18,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('nh_homes_auth_token');
-    const savedUser = localStorage.getItem('nh_homes_user');
-    const savedRole = localStorage.getItem('nh_homes_role');
+    let savedToken = localStorage.getItem('nh_homes_auth_token');
+    let savedUser = localStorage.getItem('nh_homes_user');
+    let savedRole = localStorage.getItem('nh_homes_role');
+
+    if (!savedToken || !savedUser || !savedRole) {
+      savedToken = sessionStorage.getItem('nh_homes_auth_token');
+      savedUser = sessionStorage.getItem('nh_homes_user');
+      savedRole = sessionStorage.getItem('nh_homes_role');
+    }
 
     if (savedToken && savedUser && savedRole) {
       setUser(JSON.parse(savedUser));
       setRole(savedRole as UserRole);
       setIsAuthenticated(true);
     }
+    setLoading(false);
   }, []);
 
   const login = async (username: string, password: string, portal: UserRole, rememberMe: boolean) => {
@@ -59,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: 'vikram.s@nhhomes.in',
           role: 'employee',
           name: 'Vikram Singh',
-          profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+          profileImage: '',
           entityId: 'emp-1'
         };
       } else if (username.toLowerCase() === 'neha.s' && password === 'employee123') {
@@ -69,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: 'neha.s@nhhomes.in',
           role: 'employee',
           name: 'Neha Sharma',
-          profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+          profileImage: '',
           entityId: 'emp-2'
         };
       }
@@ -81,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: 'amit.patel@lntecc.com',
           role: 'client',
           name: 'Amit Patel',
-          profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+          profileImage: '',
           entityId: 'clt-1'
         };
       } else if (username.toLowerCase() === 'rajesh' && password === 'client123') {
@@ -91,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: 'rajesh@rkinfra.in',
           role: 'client',
           name: 'Rajesh Khanna',
-          profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+          profileImage: '',
           entityId: 'clt-2'
         };
       }
@@ -144,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, isAuthenticated, login, logout, forgotPassword, changePassword }}>
+    <AuthContext.Provider value={{ user, role, isAuthenticated, loading, login, logout, forgotPassword, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

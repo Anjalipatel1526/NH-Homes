@@ -93,7 +93,7 @@ export const EmployeeManagement: React.FC = () => {
     setFormAddress('');
     setFormJoiningDate(new Date().toISOString().split('T')[0]);
     setFormStatus('Active');
-    setFormImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150');
+    setFormImage('');
     setIsAddModalOpen(true);
   };
 
@@ -339,7 +339,7 @@ export const EmployeeManagement: React.FC = () => {
               onChange={e => setFormRole(e.target.value as any)}
             />
             <Input label="Joining Date *" type="date" required value={formJoiningDate} onChange={e => setFormJoiningDate(e.target.value)} />
-            <Input label="Profile Photo Image URL" placeholder="https://unsplash.com/..." value={formImage} onChange={e => setFormImage(e.target.value)} />
+            <Input label="Profile Photo Image URL" value={formImage} onChange={e => setFormImage(e.target.value)} />
           </div>
 
           <Input label="Home Address Record" placeholder="Flat 405, Sapphire Heights, Navi Mumbai" value={formAddress} onChange={e => setFormAddress(e.target.value)} />

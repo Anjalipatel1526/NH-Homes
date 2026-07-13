@@ -37,7 +37,15 @@ import { RentalCart } from './pages/client/RentalCart';
 
 // Index Redirect Component
 const IndexRedirect: React.FC = () => {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-brand-light-grey">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

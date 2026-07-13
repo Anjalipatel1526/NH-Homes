@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Employee, Client, InventoryItem, RentalRequest, ActivityLog, SystemSettings, AdditionalCharges } from '../types';
 import { mockEmployees, mockClients, mockInventory, mockRentalRequests, mockActivityLogs, defaultSystemSettings } from '../data/mockData';
+import { supabase } from '../lib/supabase';
+import { toast } from 'react-toastify';
 
 interface DataContextType {
   employees: Employee[];
@@ -21,9 +23,9 @@ interface DataContextType {
   deleteClient: (id: string) => void;
   
   // Inventory Actions
-  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'equipmentId' | 'qrCode' | 'barcode' | 'maintenanceHistory' | 'rentalHistory'>) => void;
-  updateInventoryItem: (id: string, item: Partial<InventoryItem>) => void;
-  deleteInventoryItem: (id: string) => void;
+  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'equipmentId' | 'qrCode' | 'barcode' | 'maintenanceHistory' | 'rentalHistory'>) => void | Promise<void>;
+  updateInventoryItem: (id: string, item: Partial<InventoryItem>) => void | Promise<void>;
+  deleteInventoryItem: (id: string) => void | Promise<void>;
   
   // Rental Actions
   submitRentalRequest: (request: Omit<RentalRequest, 'id' | 'rentalNumber' | 'invoiceNumber' | 'status' | 'createdAt' | 'amountPaid'>) => void;
@@ -45,6 +47,70 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rentalRequests, setRentalRequests] = useState<RentalRequest[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [settings, setSettings] = useState<SystemSettings>(defaultSystemSettings);
+
+  const fetchInventory = async () => {
+    try {
+      const { data: dbItems, error } = await supabase
+        .from('inventory_items')
+        .select('*');
+        
+      if (error) {
+        console.error('Error fetching inventory from Supabase:', error);
+        return;
+      }
+      
+      if (dbItems) {
+        const mappedItems = await Promise.all(dbItems.map(async (dbItem) => {
+          const { data: specs } = await supabase
+            .from('equipment_specifications')
+            .select('*')
+            .eq('inventory_item_id', dbItem.id);
+            
+          const { data: maintenance } = await supabase
+            .from('maintenance_records')
+            .select('*')
+            .eq('inventory_item_id', dbItem.id);
+
+          return {
+            id: dbItem.id,
+            equipmentId: dbItem.equipment_id,
+            name: dbItem.name,
+            category: dbItem.category,
+            brand: dbItem.brand,
+            model: dbItem.model,
+            serialNumber: dbItem.serial_number,
+            purchaseDate: dbItem.purchase_date,
+            purchasePrice: Number(dbItem.purchase_price),
+            rentalPriceDay: Number(dbItem.rental_price_day),
+            rentalPriceWeek: Number(dbItem.rental_price_week),
+            rentalPriceMonth: Number(dbItem.rental_price_month),
+            securityDeposit: Number(dbItem.security_deposit),
+            currentLocation: dbItem.current_location || '',
+            images: dbItem.images || [],
+            status: dbItem.status,
+            qrCode: dbItem.qr_code || '',
+            barcode: dbItem.barcode || '',
+            specifications: specs ? specs.map(s => ({ label: s.label, value: s.value })) : [],
+            description: dbItem.description || '',
+            maintenanceHistory: maintenance ? maintenance.map(m => ({
+              id: m.id,
+              date: m.date,
+              type: m.type,
+              cost: Number(m.cost),
+              description: m.description || '',
+              technician: m.technician
+            })) : [],
+            rentalHistory: []
+          };
+        }));
+        
+        setInventory(mappedItems);
+        localStorage.setItem('nh_homes_db_v2_inventory', JSON.stringify(mappedItems));
+      }
+    } catch (err) {
+      console.error('Failed to sync Supabase inventory:', err);
+    }
+  };
 
   // Initialize data from localStorage or mockData
   useEffect(() => {
@@ -72,6 +138,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (localSettings) setSettings(JSON.parse(localSettings));
     else { setSettings(defaultSystemSettings); localStorage.setItem('nh_homes_db_v2_settings', JSON.stringify(defaultSystemSettings)); }
+
+    fetchInventory();
   }, []);
 
   // Sync state helpers
@@ -140,31 +208,141 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Inventory Actions
-  const addInventoryItem = (itemData: Omit<InventoryItem, 'id' | 'equipmentId' | 'qrCode' | 'barcode' | 'maintenanceHistory' | 'rentalHistory'>) => {
-    const categoryCode = itemData.category.substring(0, 3).toUpperCase();
-    const nextIdNum = inventory.length + 1;
-    const equipmentId = `EQ-${categoryCode}-${nextIdNum.toString().padStart(3, '0')}`;
-    
-    const newItem: InventoryItem = {
-      ...itemData,
-      id: `inv-${Date.now()}`,
-      equipmentId,
-      qrCode: `QR_${equipmentId}_${Date.now()}`,
-      barcode: `BAR_${equipmentId}_${Date.now()}`,
-      maintenanceHistory: [],
-      rentalHistory: []
-    };
-    saveInventory([...inventory, newItem]);
+  const addInventoryItem = async (itemData: Omit<InventoryItem, 'id' | 'equipmentId' | 'qrCode' | 'barcode' | 'maintenanceHistory' | 'rentalHistory'>) => {
+    try {
+      const dbData = {
+        name: itemData.name,
+        category: itemData.category,
+        brand: itemData.brand,
+        model: itemData.model,
+        serial_number: itemData.serialNumber,
+        purchase_date: itemData.purchaseDate,
+        purchase_price: itemData.purchasePrice,
+        rental_price_day: itemData.rentalPriceDay,
+        rental_price_week: itemData.rentalPriceWeek,
+        rental_price_month: itemData.rentalPriceMonth,
+        security_deposit: itemData.securityDeposit,
+        current_location: itemData.currentLocation,
+        images: itemData.images,
+        status: 'Available' as const,
+        description: itemData.description
+      };
+      
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .insert(dbData)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error inserting item to Supabase:', error);
+        throw error;
+      }
+      
+      if (data) {
+        const newItem: InventoryItem = {
+          id: data.id,
+          equipmentId: data.equipment_id,
+          name: data.name,
+          category: data.category,
+          brand: data.brand,
+          model: data.model,
+          serialNumber: data.serial_number,
+          purchaseDate: data.purchase_date,
+          purchasePrice: Number(data.purchase_price),
+          rentalPriceDay: Number(data.rental_price_day),
+          rentalPriceWeek: Number(data.rental_price_week),
+          rentalPriceMonth: Number(data.rental_price_month),
+          securityDeposit: Number(data.security_deposit),
+          currentLocation: data.current_location || '',
+          images: data.images || [],
+          status: data.status,
+          qrCode: data.qr_code || '',
+          barcode: data.barcode || '',
+          specifications: itemData.specifications || [],
+          description: data.description || '',
+          maintenanceHistory: [],
+          rentalHistory: []
+        };
+
+        if (itemData.specifications && itemData.specifications.length > 0) {
+          const dbSpecs = itemData.specifications.map((s: any) => ({
+            inventory_item_id: data.id,
+            label: s.label,
+            value: s.value
+          }));
+          await supabase.from('equipment_specifications').insert(dbSpecs);
+        }
+
+        const updatedInventory = [...inventory, newItem];
+        setInventory(updatedInventory);
+        localStorage.setItem('nh_homes_db_v2_inventory', JSON.stringify(updatedInventory));
+        toast.success('Equipment asset successfully added!');
+      }
+    } catch (err: any) {
+      console.error('Failed to add item:', err);
+      toast.error(err?.message || 'Database error: Failed to add equipment asset.');
+    }
   };
 
-  const updateInventoryItem = (id: string, updatedFields: Partial<InventoryItem>) => {
-    const updated = inventory.map(item => item.id === id ? { ...item, ...updatedFields } : item);
-    saveInventory(updated);
+  const updateInventoryItem = async (id: string, updatedFields: Partial<InventoryItem>) => {
+    try {
+      const dbFields: any = {};
+      if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
+      if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
+      if (updatedFields.brand !== undefined) dbFields.brand = updatedFields.brand;
+      if (updatedFields.model !== undefined) dbFields.model = updatedFields.model;
+      if (updatedFields.serialNumber !== undefined) dbFields.serial_number = updatedFields.serialNumber;
+      if (updatedFields.purchaseDate !== undefined) dbFields.purchase_date = updatedFields.purchaseDate;
+      if (updatedFields.purchasePrice !== undefined) dbFields.purchase_price = updatedFields.purchasePrice;
+      if (updatedFields.rentalPriceDay !== undefined) dbFields.rental_price_day = updatedFields.rentalPriceDay;
+      if (updatedFields.rentalPriceWeek !== undefined) dbFields.rental_price_week = updatedFields.rentalPriceWeek;
+      if (updatedFields.rentalPriceMonth !== undefined) dbFields.rental_price_month = updatedFields.rentalPriceMonth;
+      if (updatedFields.securityDeposit !== undefined) dbFields.security_deposit = updatedFields.securityDeposit;
+      if (updatedFields.currentLocation !== undefined) dbFields.current_location = updatedFields.currentLocation;
+      if (updatedFields.images !== undefined) dbFields.images = updatedFields.images;
+      if (updatedFields.status !== undefined) dbFields.status = updatedFields.status;
+      if (updatedFields.description !== undefined) dbFields.description = updatedFields.description;
+
+      const { error } = await supabase
+        .from('inventory_items')
+        .update(dbFields)
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating item in Supabase:', error);
+        throw error;
+      }
+
+      const updated = inventory.map(item => item.id === id ? { ...item, ...updatedFields } : item);
+      setInventory(updated);
+      localStorage.setItem('nh_homes_db_v2_inventory', JSON.stringify(updated));
+      toast.success('Equipment asset successfully updated!');
+    } catch (err: any) {
+      console.error('Failed to update item:', err);
+      toast.error(err?.message || 'Database error: Failed to update equipment asset.');
+    }
   };
 
-  const deleteInventoryItem = (id: string) => {
-    const filtered = inventory.filter(item => item.id !== id);
-    saveInventory(filtered);
+  const deleteInventoryItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('inventory_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting item from Supabase:', error);
+        throw error;
+      }
+
+      const filtered = inventory.filter(item => item.id !== id);
+      setInventory(filtered);
+      localStorage.setItem('nh_homes_db_v2_inventory', JSON.stringify(filtered));
+    } catch (err: any) {
+      console.error('Failed to delete item:', err);
+      toast.error(err?.message || 'Database error: Failed to delete equipment asset.');
+    }
   };
 
   // Rental Actions

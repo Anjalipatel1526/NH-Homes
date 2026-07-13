@@ -46,10 +46,11 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   options: { label: string; value: string | number }[];
+  placeholder?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, className, ...props }, ref) => {
+  ({ label, error, options, placeholder, className, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -61,7 +62,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             className={clsx(
-              'block w-full rounded-xl border border-stone-200 py-2.5 px-4 text-xs transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none bg-white text-stone-850 hover:border-stone-300 appearance-none cursor-pointer',
+              'block w-full rounded-xl border border-stone-200 py-2.5 px-4 text-xs transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none bg-white hover:border-stone-300 appearance-none cursor-pointer',
+              !props.value || props.value === '' ? 'text-stone-400' : 'text-stone-850',
               error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-stone-200',
               className
             )}
@@ -73,8 +75,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             }}
             {...props}
           >
+            {placeholder && (
+              <option value="" disabled>
+                {placeholder}
+              </option>
+            )}
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <option key={opt.value} value={opt.value} className="text-stone-850">
                 {opt.label}
               </option>
             ))}

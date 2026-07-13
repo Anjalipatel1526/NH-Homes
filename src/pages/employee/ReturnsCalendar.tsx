@@ -151,7 +151,7 @@ export const ReturnsCalendar: React.FC = () => {
           {filteredRentals.length > 0 ? (
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-brand-light-grey border-b border-brand-border text-brand-dark-grey font-bold uppercase tracking-wider">
+                <tr className="bg-brand-light-grey border-b border-brand-border text-brand-dark-grey font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">
                   <th className="px-6 py-4">Contract No</th>
                   <th className="px-6 py-4">Company Name</th>
                   <th className="px-6 py-4">Equipment Description</th>
@@ -164,7 +164,7 @@ export const ReturnsCalendar: React.FC = () => {
                 {filteredRentals.map(rental => {
                   const isOverdue = new Date(rental.expectedReturnDate) < new Date();
                   return (
-                    <tr key={rental.id} className="hover:bg-brand-light-grey/30 transition-colors">
+                    <tr key={rental.id} className="hover:bg-brand-light-grey/30 transition-colors whitespace-nowrap">
                       <td className="px-6 py-4 font-bold text-brand-text font-mono">{rental.rentalNumber}</td>
                       <td className="px-6 py-4">
                         <p className="font-semibold text-brand-text">{rental.companyName}</p>
@@ -180,10 +180,12 @@ export const ReturnsCalendar: React.FC = () => {
                           {isOverdue ? 'Overdue Return' : 'Active On-Site'}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-right flex justify-end gap-2 mt-1.5">
-                        <Button variant="primary" size="sm" onClick={() => handleOpenCheckIn(rental)} leftIcon={<HiOutlineClipboardDocumentCheck />}>
-                          Check-In Items
-                        </Button>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end items-center gap-2">
+                          <Button variant="primary" size="sm" onClick={() => handleOpenCheckIn(rental)} leftIcon={<HiOutlineClipboardDocumentCheck />}>
+                            Check-In Items
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

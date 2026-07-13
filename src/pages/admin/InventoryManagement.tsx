@@ -37,7 +37,7 @@ export const InventoryManagement: React.FC = () => {
 
   // Form States
   const [formName, setFormName] = useState('');
-  const [formCategory, setFormCategory] = useState('Excavators');
+  const [formCategory, setFormCategory] = useState('');
   const [formBrand, setFormBrand] = useState('');
   const [formModel, setFormModel] = useState('');
   const [formSerial, setFormSerial] = useState('');
@@ -84,7 +84,7 @@ export const InventoryManagement: React.FC = () => {
 
   const handleOpenAdd = () => {
     setFormName('');
-    setFormCategory('Excavators');
+    setFormCategory('');
     setFormBrand('');
     setFormModel('');
     setFormSerial('');
@@ -96,13 +96,13 @@ export const InventoryManagement: React.FC = () => {
     setFormDeposit(0);
     setFormLocation('');
     setFormDescription('');
-    setFormImage('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500');
+    setFormImage('');
     setIsAddModalOpen(true);
   };
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName || !formBrand || !formModel || !formSerial) {
+    if (!formName || !formBrand || !formModel || !formSerial || !formCategory || !formLocation || !formPriceDay) {
       toast.error('Please complete all required fields');
       return;
     }
@@ -120,7 +120,7 @@ export const InventoryManagement: React.FC = () => {
       rentalPriceMonth: Number(formPriceMonth),
       securityDeposit: Number(formDeposit),
       currentLocation: formLocation || 'Yard Panvel',
-      images: [formImage || 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500'],
+      images: formImage ? [formImage] : [],
       status: 'Available',
       description: formDescription,
       specifications: [
@@ -157,6 +157,10 @@ export const InventoryManagement: React.FC = () => {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedItem) return;
+    if (!formName || !formBrand || !formModel || !formSerial || !formCategory || !formLocation || !formPriceDay) {
+      toast.error('Please complete all required fields');
+      return;
+    }
 
     updateInventoryItem(selectedItem.id, {
       name: formName,
@@ -190,7 +194,6 @@ export const InventoryManagement: React.FC = () => {
     if (!selectedItem) return;
     deleteInventoryItem(selectedItem.id);
     logActivity(user?.name || 'Admin', 'admin', 'Deleted Equipment', 'delete', `Deleted equipment unit ID ${selectedItem.equipmentId}`);
-    toast.success('Equipment deleted successfully');
     setIsDeleteConfirmOpen(false);
     setSelectedItem(null);
   };
@@ -293,7 +296,7 @@ export const InventoryManagement: React.FC = () => {
           {filteredInventory.length > 0 ? (
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-brand-light-grey border-b border-brand-border text-brand-dark-grey font-bold uppercase tracking-wider">
+                <tr className="bg-brand-light-grey border-b border-brand-border text-brand-dark-grey font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">
                   <th className="px-6 py-4">Equipment ID</th>
                   <th className="px-6 py-4">Thumbnail</th>
                   <th className="px-6 py-4">Equipment Name</th>
@@ -306,10 +309,18 @@ export const InventoryManagement: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-brand-border">
                 {filteredInventory.map((item) => (
-                  <tr key={item.id} className="hover:bg-brand-light-grey/30 transition-colors">
+                  <tr key={item.id} className="hover:bg-brand-light-grey/30 transition-colors whitespace-nowrap">
                     <td className="px-6 py-4 font-bold text-brand-text">{item.equipmentId}</td>
                     <td className="px-6 py-4">
-                      <img src={item.images[0]} alt={item.name} className="h-10 w-12 rounded object-cover border border-brand-border" />
+                      {item.images[0] ? (
+                        <img src={item.images[0]} alt={item.name} className="h-10 w-12 rounded object-cover border border-brand-border" />
+                      ) : (
+                        <div className="h-10 w-12 rounded border border-dashed border-brand-border bg-brand-light-grey flex items-center justify-center">
+                          <svg className="w-5 h-5 text-brand-dark-grey opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-semibold text-brand-text">
                       {item.name}
@@ -319,16 +330,18 @@ export const InventoryManagement: React.FC = () => {
                     <td className="px-6 py-4 font-bold text-primary">₹{item.rentalPriceDay.toLocaleString('en-IN')}/day</td>
                     <td className="px-6 py-4 text-brand-text font-medium">{item.currentLocation}</td>
                     <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                    <td className="px-6 py-4 text-right flex justify-end gap-2 mt-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenDetail(item)} className="p-1.5" title="View Details">
-                        <HiOutlineEye className="h-4.5 w-4.5 text-brand-dark-grey" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(item)} className="p-1.5" title="Edit Item">
-                        <HiOutlinePencilSquare className="h-4.5 w-4.5 text-brand-dark-grey" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteTrigger(item)} className="p-1.5 text-red-600 hover:text-red-700" title="Delete Item">
-                        <HiOutlineTrash className="h-4.5 w-4.5" />
-                      </Button>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenDetail(item)} className="p-1.5" title="View Details">
+                          <HiOutlineEye className="h-4.5 w-4.5 text-brand-dark-grey" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(item)} className="p-1.5" title="Edit Item">
+                          <HiOutlinePencilSquare className="h-4.5 w-4.5 text-brand-dark-grey" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteTrigger(item)} className="p-1.5 text-red-600 hover:text-red-700" title="Delete Item">
+                          <HiOutlineTrash className="h-4.5 w-4.5" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -347,7 +360,7 @@ export const InventoryManagement: React.FC = () => {
         <form onSubmit={handleAddSubmit} className="space-y-4 text-left text-xs">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Equipment Name *" placeholder="e.g. Caterpillar 320DL Excavator" required value={formName} onChange={e => setFormName(e.target.value)} />
-            <Select label="Category *" options={categories.map(c => ({ label: c, value: c }))} value={formCategory} onChange={e => setFormCategory(e.target.value)} />
+            <Select label="Category *" placeholder="Select a category" options={categories.map(c => ({ label: c, value: c }))} value={formCategory} onChange={e => setFormCategory(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -356,7 +369,21 @@ export const InventoryManagement: React.FC = () => {
             <Input label="Serial Number *" placeholder="e.g. CAT-SN-998877" required value={formSerial} onChange={e => setFormSerial(e.target.value)} />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Current Location / Yard *" placeholder="e.g. Yard Panvel" required value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+            <Input label="Day Rent Rate (₹) *" type="number" min="0" placeholder="e.g. 1500" required value={formPriceDay || ''} onChange={e => setFormPriceDay(Number(e.target.value))} />
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input label="Week Rent Rate (₹)" type="number" min="0" placeholder="e.g. 9000" value={formPriceWeek || ''} onChange={e => setFormPriceWeek(Number(e.target.value))} />
+            <Input label="Month Rent Rate (₹)" type="number" min="0" placeholder="e.g. 35000" value={formPriceMonth || ''} onChange={e => setFormPriceMonth(Number(e.target.value))} />
+            <Input label="Security Deposit (₹)" type="number" min="0" placeholder="e.g. 5000" value={formDeposit || ''} onChange={e => setFormDeposit(Number(e.target.value))} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Purchase Date" type="date" value={formPurchaseDate} onChange={e => setFormPurchaseDate(e.target.value)} />
+            <Input label="Purchase Price (₹)" type="number" min="0" placeholder="e.g. 450000" value={formPurchasePrice || ''} onChange={e => setFormPurchasePrice(Number(e.target.value))} />
+          </div>
 
           <Textarea label="Asset Description" placeholder="Detailed specifications, attachments, driver requirements..." value={formDescription} onChange={e => setFormDescription(e.target.value)} />
           
@@ -427,6 +454,22 @@ export const InventoryManagement: React.FC = () => {
             <Input label="Brand *" required value={formBrand} onChange={e => setFormBrand(e.target.value)} />
             <Input label="Model *" required value={formModel} onChange={e => setFormModel(e.target.value)} />
             <Input label="Serial Number *" required value={formSerial} onChange={e => setFormSerial(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Current Location / Yard *" required value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+            <Input label="Day Rent Rate (₹) *" type="number" min="0" required value={formPriceDay || ''} onChange={e => setFormPriceDay(Number(e.target.value))} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Input label="Week Rent Rate (₹)" type="number" min="0" value={formPriceWeek || ''} onChange={e => setFormPriceWeek(Number(e.target.value))} />
+            <Input label="Month Rent Rate (₹)" type="number" min="0" value={formPriceMonth || ''} onChange={e => setFormPriceMonth(Number(e.target.value))} />
+            <Input label="Security Deposit (₹)" type="number" min="0" value={formDeposit || ''} onChange={e => setFormDeposit(Number(e.target.value))} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Purchase Date" type="date" value={formPurchaseDate} onChange={e => setFormPurchaseDate(e.target.value)} />
+            <Input label="Purchase Price (₹)" type="number" min="0" value={formPurchasePrice || ''} onChange={e => setFormPurchasePrice(Number(e.target.value))} />
           </div>
 
           <Select
@@ -506,7 +549,15 @@ export const InventoryManagement: React.FC = () => {
           <div className="space-y-6 text-left text-xs">
             {/* Header Details */}
             <div className="flex gap-4">
-              <img src={selectedItem.images[0]} alt={selectedItem.name} className="h-24 w-32 object-cover rounded-lg border border-brand-border shadow-soft" />
+              {selectedItem.images[0] ? (
+                <img src={selectedItem.images[0]} alt={selectedItem.name} className="h-24 w-32 object-cover rounded-lg border border-brand-border shadow-soft" />
+              ) : (
+                <div className="h-24 w-32 rounded-lg border border-dashed border-brand-border bg-brand-light-grey flex items-center justify-center">
+                  <svg className="w-10 h-10 text-brand-dark-grey opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
               <div>
                 <h3 className="text-base font-extrabold text-brand-text leading-tight">{selectedItem.name}</h3>
                 <span className="block text-xs text-brand-dark-grey mt-1">ID: <strong className="text-brand-text">{selectedItem.equipmentId}</strong> | Brand: <strong className="text-brand-text">{selectedItem.brand} {selectedItem.model}</strong></span>
@@ -623,8 +674,8 @@ export const InventoryManagement: React.FC = () => {
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteConfirmOpen} onClose={() => setIsDeleteConfirmOpen(false)} title="Confirm Equipment Deletion" size="sm">
         <div className="space-y-4 text-left text-xs">
-          <p className="text-brand-text leading-relaxed">
-            Are you sure you want to permanently delete equipment asset <strong className="text-red-600">{selectedItem?.name} ({selectedItem?.equipmentId})</strong>? This action cannot be undone and will remove all histories from the system registries.
+          <p className="text-brand-text leading-relaxed font-medium">
+            Are you sure you want to delete?
           </p>
           <div className="flex justify-end gap-2.5 pt-2">
             <Button variant="outline" size="sm" onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</Button>
