@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { toast } from 'react-toastify';
-import { HiOutlineUser, HiOutlineLockClosed, HiOutlineEnvelope } from 'react-icons/hi2';
+import { HiOutlineUser, HiOutlineLockClosed, HiOutlineEnvelope, HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 import { Sparkles } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -15,6 +15,7 @@ export const Login: React.FC = () => {
   const portal = 'admin';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -88,7 +89,7 @@ export const Login: React.FC = () => {
         <div className="relative">
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             placeholder=""
             required
             name="nh_login_pass"
@@ -96,6 +97,20 @@ export const Login: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             leftIcon={<HiOutlineLockClosed className="h-5 w-5" />}
+            rightIcon={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-stone-400 hover:text-stone-600 focus:outline-none cursor-pointer flex items-center justify-center p-1"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <HiOutlineEyeSlash className="h-4.5 w-4.5" />
+                ) : (
+                  <HiOutlineEye className="h-4.5 w-4.5" />
+                )}
+              </button>
+            }
           />
         </div>
 
