@@ -13,14 +13,14 @@ interface DataContextType {
   settings: SystemSettings;
   
   // Employee Actions
-  addEmployee: (employee: Omit<Employee, 'id' | 'employeeId'>) => void;
-  updateEmployee: (id: string, employee: Partial<Employee>) => void;
-  deleteEmployee: (id: string) => void;
+  addEmployee: (employee: Omit<Employee, 'id' | 'employeeId'>) => void | Promise<void>;
+  updateEmployee: (id: string, employee: Partial<Employee>) => void | Promise<void>;
+  deleteEmployee: (id: string) => void | Promise<void>;
   
   // Client Actions
-  addClient: (client: Omit<Client, 'id' | 'rentalHistory' | 'paymentHistory'>) => void;
-  updateClient: (id: string, client: Partial<Client>) => void;
-  deleteClient: (id: string) => void;
+  addClient: (client: Omit<Client, 'id' | 'rentalHistory' | 'paymentHistory'>) => void | Promise<void>;
+  updateClient: (id: string, client: Partial<Client>) => void | Promise<void>;
+  deleteClient: (id: string) => void | Promise<void>;
   
   // Inventory Actions
   addInventoryItem: (item: Omit<InventoryItem, 'id' | 'equipmentId' | 'qrCode' | 'barcode' | 'maintenanceHistory' | 'rentalHistory'>) => void | Promise<void>;
@@ -112,6 +112,266 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const { data: dbEmployees, error } = await supabase
+        .from('employees')
+        .select('*');
+        
+      if (error) {
+        console.error('Error fetching employees from Supabase:', error);
+        return;
+      }
+      
+      if (dbEmployees) {
+        // Read local storage employees
+        const localEmployeesStr = localStorage.getItem('nh_homes_db_v2_employees');
+        let localEmployees: Employee[] = [];
+        if (localEmployeesStr) {
+          try {
+            localEmployees = JSON.parse(localEmployeesStr);
+          } catch (e) {
+            console.error('Error parsing local employees:', e);
+          }
+        }
+
+        // Find missing from DB
+        const dbIds = new Set(dbEmployees.map(e => e.id));
+        const missingFromDb = localEmployees.filter(e => !dbIds.has(e.id));
+
+        if (missingFromDb.length > 0) {
+          console.log(`Migrating ${missingFromDb.length} local employees to Supabase...`);
+          const rowsToInsert = missingFromDb.map(emp => ({
+            id: emp.id,
+            employee_id: emp.employeeId,
+            name: emp.name,
+            username: emp.username || emp.email.split('@')[0],
+            email: emp.email,
+            phone: emp.phone,
+            role: emp.role,
+            department: emp.department,
+            profile_picture: emp.profilePicture || '',
+            avatar: emp.profilePicture || '',
+            address: emp.address || '',
+            joining_date: emp.joiningDate || new Date().toISOString().split('T')[0],
+            status: emp.status,
+            salary: 0,
+            rating: 5.0,
+            tasks_completed: 0,
+            efficiency: 100
+          }));
+
+          const { error: insertError } = await supabase
+            .from('employees')
+            .insert(rowsToInsert);
+
+          if (insertError) {
+            console.error('Error migrating employees to Supabase:', insertError);
+          } else {
+            console.log('Successfully migrated employees.');
+            const { data: refreshedDb } = await supabase.from('employees').select('*');
+            if (refreshedDb) {
+              const mapped = refreshedDb.map((e) => ({
+                id: e.id,
+                employeeId: e.employee_id || '',
+                name: e.name,
+                username: e.username || '',
+                email: e.email,
+                phone: e.phone || '',
+                role: e.role as 'admin' | 'employee',
+                department: e.department || '',
+                profilePicture: e.profile_picture || e.avatar || '',
+                address: e.address || '',
+                joiningDate: e.joining_date || '',
+                status: e.status
+              }));
+              setEmployees(mapped);
+              localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(mapped));
+              return;
+            }
+          }
+        }
+
+        const mappedEmployees = dbEmployees.map((e) => ({
+          id: e.id,
+          employeeId: e.employee_id || '',
+          name: e.name,
+          username: e.username || '',
+          email: e.email,
+          phone: e.phone || '',
+          role: e.role as 'admin' | 'employee',
+          department: e.department || '',
+          profilePicture: e.profile_picture || e.avatar || '',
+          address: e.address || '',
+          joiningDate: e.joining_date || '',
+          status: e.status
+        }));
+        
+        setEmployees(mappedEmployees);
+        localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(mappedEmployees));
+      }
+    } catch (err) {
+      console.error('Failed to sync Supabase employees:', err);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const { data: dbClients, error } = await supabase
+        .from('clients')
+        .select('*');
+        
+      if (error) {
+        console.error('Error fetching clients from Supabase:', error);
+        return;
+      }
+      
+      if (dbClients) {
+        const localClientsStr = localStorage.getItem('nh_homes_db_v2_clients');
+        let localClients: Client[] = [];
+        if (localClientsStr) {
+          try {
+            localClients = JSON.parse(localClientsStr);
+          } catch (e) {
+            console.error('Error parsing local clients:', e);
+          }
+        }
+
+        const dbIds = new Set(dbClients.map(c => c.id));
+        const missingFromDb = localClients.filter(c => !dbIds.has(c.id));
+
+        if (missingFromDb.length > 0) {
+          console.log(`Migrating ${missingFromDb.length} local clients to Supabase...`);
+          const rowsToInsert = missingFromDb.map(c => ({
+            id: c.id,
+            name: c.name,
+            company_name: c.companyName,
+            email: c.email,
+            phone: c.phone,
+            status: c.status,
+            address: c.address || '',
+            gstin: c.gstNumber || '',
+            pan: c.panNumber || '',
+            client_id: c.email.split('@')[0],
+            password: c.password || '',
+            city: c.city || '',
+            state: c.state || '',
+            pincode: c.pincode || '',
+            id_proof: c.idProof || '',
+            notes: c.notes || '',
+            profile_image: c.profileImage || '',
+            outstanding_payment: 0.00,
+            total_rentals: 0
+          }));
+
+          const { error: insertError } = await supabase
+            .from('clients')
+            .insert(rowsToInsert);
+
+          if (insertError) {
+            console.error('Error migrating clients to Supabase:', insertError);
+          } else {
+            console.log('Successfully migrated clients.');
+            const { data: refreshedDb } = await supabase.from('clients').select('*');
+            if (refreshedDb) {
+              const mapped = await Promise.all(refreshedDb.map(async (c) => {
+                const { data: rentals } = await supabase.from('client_rental_history').select('*').eq('client_id', c.id);
+                const { data: payments } = await supabase.from('client_payment_history').select('*').eq('client_id', c.id);
+                return {
+                  id: c.id,
+                  name: c.name,
+                  companyName: c.company_name,
+                  gstNumber: c.gstin || '',
+                  panNumber: c.pan || '',
+                  phone: c.phone || '',
+                  email: c.email || '',
+                  address: c.address || '',
+                  city: c.city || '',
+                  state: c.state || '',
+                  pincode: c.pincode || '',
+                  idProof: c.id_proof || '',
+                  status: c.status,
+                  notes: c.notes || '',
+                  profileImage: c.profile_image || '',
+                  documents: c.documents || [],
+                  password: c.password || '',
+                  rentalHistory: rentals ? rentals.map(r => ({
+                    rentalNumber: r.rental_number,
+                    startDate: r.start_date,
+                    endDate: r.end_date,
+                    totalAmount: Number(r.amount),
+                    status: r.status
+                  })) : [],
+                  paymentHistory: payments ? payments.map(p => ({
+                    invoiceNumber: p.invoice_number,
+                    date: p.date,
+                    amount: Number(p.amount),
+                    method: p.method,
+                    status: p.status
+                  })) : []
+                };
+              }));
+              setClients(mapped);
+              localStorage.setItem('nh_homes_db_v2_clients', JSON.stringify(mapped));
+              return;
+            }
+          }
+        }
+
+        const mappedClients = await Promise.all(dbClients.map(async (c) => {
+          const { data: rentals } = await supabase
+            .from('client_rental_history')
+            .select('*')
+            .eq('client_id', c.id);
+            
+          const { data: payments } = await supabase
+            .from('client_payment_history')
+            .select('*')
+            .eq('client_id', c.id);
+
+          return {
+            id: c.id,
+            name: c.name,
+            companyName: c.company_name,
+            gstNumber: c.gstin || '',
+            panNumber: c.pan || '',
+            phone: c.phone || '',
+            email: c.email || '',
+            address: c.address || '',
+            city: c.city || '',
+            state: c.state || '',
+            pincode: c.pincode || '',
+            idProof: c.id_proof || '',
+            status: c.status,
+            notes: c.notes || '',
+            profileImage: c.profile_image || '',
+            documents: c.documents || [],
+            password: c.password || '',
+            rentalHistory: rentals ? rentals.map(r => ({
+              rentalNumber: r.rental_number,
+              startDate: r.start_date,
+              endDate: r.end_date,
+              totalAmount: Number(r.amount),
+              status: r.status
+            })) : [],
+            paymentHistory: payments ? payments.map(p => ({
+              invoiceNumber: p.invoice_number,
+              date: p.date,
+              amount: Number(p.amount),
+              method: p.method,
+              status: p.status
+            })) : []
+          };
+        }));
+        
+        setClients(mappedClients);
+        localStorage.setItem('nh_homes_db_v2_clients', JSON.stringify(mappedClients));
+      }
+    } catch (err) {
+      console.error('Failed to sync Supabase clients:', err);
+    }
+  };
+
   // Initialize data from localStorage or mockData
   useEffect(() => {
     const localEmployees = localStorage.getItem('nh_homes_db_v2_employees');
@@ -140,6 +400,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     else { setSettings(defaultSystemSettings); localStorage.setItem('nh_homes_db_v2_settings', JSON.stringify(defaultSystemSettings)); }
 
     fetchInventory();
+    fetchClients();
+    fetchEmployees();
   }, []);
 
   // Sync state helpers
@@ -164,47 +426,277 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Employee Actions
-  const addEmployee = (empData: Omit<Employee, 'id' | 'employeeId'>) => {
-    const nextIdNum = employees.length + 1;
-    const employeeId = `EMP-${nextIdNum.toString().padStart(3, '0')}`;
-    const newEmp: Employee = {
-      ...empData,
-      id: `emp-${Date.now()}`,
-      employeeId,
-      status: 'Active'
-    };
-    saveEmployees([...employees, newEmp]);
+  const addEmployee = async (empData: Omit<Employee, 'id' | 'employeeId'>) => {
+    try {
+      const generatedId = `emp-${Date.now()}`;
+      const nextIdNum = employees.length + 1;
+      const employeeId = `EMP-${nextIdNum.toString().padStart(3, '0')}`;
+      
+      const dbData = {
+        id: generatedId,
+        employee_id: employeeId,
+        name: empData.name,
+        username: empData.username || empData.email.split('@')[0],
+        email: empData.email,
+        phone: empData.phone,
+        role: empData.role,
+        department: empData.department,
+        profile_picture: empData.profilePicture || '',
+        avatar: empData.profilePicture || '',
+        address: empData.address || '',
+        joining_date: empData.joiningDate || new Date().toISOString().split('T')[0],
+        status: 'Active',
+        salary: 0,
+        rating: 5.0,
+        tasks_completed: 0,
+        efficiency: 100
+      };
+
+      const { data, error } = await supabase
+        .from('employees')
+        .insert(dbData)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error inserting employee into Supabase:', error);
+        throw error;
+      }
+
+      if (data) {
+        const newEmp: Employee = {
+          id: data.id,
+          employeeId: data.employee_id || '',
+          name: data.name,
+          username: data.username || '',
+          email: data.email,
+          phone: data.phone || '',
+          role: data.role as 'admin' | 'employee',
+          department: data.department || '',
+          profilePicture: data.profile_picture || data.avatar || '',
+          address: data.address || '',
+          joiningDate: data.joining_date || '',
+          status: data.status
+        };
+
+        const updatedEmployees = [...employees, newEmp];
+        setEmployees(updatedEmployees);
+        localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(updatedEmployees));
+      }
+    } catch (err: any) {
+      console.error('Failed to add employee:', err);
+      toast.error(err?.message || 'Database error: Failed to register employee.');
+      throw err;
+    }
   };
 
-  const updateEmployee = (id: string, updatedFields: Partial<Employee>) => {
-    const updated = employees.map(emp => emp.id === id ? { ...emp, ...updatedFields } : emp);
-    saveEmployees(updated);
+  const updateEmployee = async (id: string, updatedFields: Partial<Employee>) => {
+    try {
+      const existingEmp = employees.find(emp => emp.id === id);
+      if (!existingEmp) throw new Error('Employee not found in local state');
+
+      const mergedEmp = { ...existingEmp, ...updatedFields };
+
+      const dbData = {
+        id: mergedEmp.id,
+        employee_id: mergedEmp.employeeId,
+        name: mergedEmp.name,
+        username: mergedEmp.username || mergedEmp.email.split('@')[0],
+        email: mergedEmp.email,
+        phone: mergedEmp.phone,
+        role: mergedEmp.role,
+        department: mergedEmp.department,
+        profile_picture: mergedEmp.profilePicture || '',
+        avatar: mergedEmp.profilePicture || '',
+        address: mergedEmp.address || '',
+        joining_date: mergedEmp.joiningDate || new Date().toISOString().split('T')[0],
+        status: mergedEmp.status,
+        salary: 0,
+        rating: 5.0,
+        tasks_completed: 0,
+        efficiency: 100
+      };
+
+      const { error } = await supabase
+        .from('employees')
+        .upsert(dbData);
+
+      if (error) {
+        console.error('Error upserting employee in Supabase:', error);
+        throw error;
+      }
+
+      const updated = employees.map(emp => emp.id === id ? mergedEmp : emp);
+      setEmployees(updated);
+      localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(updated));
+    } catch (err: any) {
+      console.error('Failed to update employee:', err);
+      toast.error(err?.message || 'Database error: Failed to update employee.');
+      throw err;
+    }
   };
 
-  const deleteEmployee = (id: string) => {
-    const filtered = employees.filter(emp => emp.id !== id);
-    saveEmployees(filtered);
+  const deleteEmployee = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting employee from Supabase:', error);
+        throw error;
+      }
+
+      const filtered = employees.filter(emp => emp.id !== id);
+      setEmployees(filtered);
+      localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(filtered));
+    } catch (err: any) {
+      console.error('Failed to delete employee:', err);
+      toast.error(err?.message || 'Database error: Failed to delete employee.');
+      throw err;
+    }
   };
 
   // Client Actions
-  const addClient = (cltData: Omit<Client, 'id' | 'rentalHistory' | 'paymentHistory'>) => {
-    const newClt: Client = {
-      ...cltData,
-      id: `clt-${Date.now()}`,
-      rentalHistory: [],
-      paymentHistory: []
-    };
-    saveClients([...clients, newClt]);
+  const addClient = async (cltData: Omit<Client, 'id' | 'rentalHistory' | 'paymentHistory'>) => {
+    try {
+      const generatedId = `clt-${Date.now()}`;
+      const dbData = {
+        id: generatedId,
+        name: cltData.name,
+        company_name: cltData.companyName,
+        email: cltData.email,
+        phone: cltData.phone,
+        status: cltData.status,
+        address: cltData.address || '',
+        gstin: cltData.gstNumber || '',
+        pan: cltData.panNumber || '',
+        client_id: cltData.email.split('@')[0],
+        password: cltData.password || '',
+        city: cltData.city || '',
+        state: cltData.state || '',
+        pincode: cltData.pincode || '',
+        id_proof: cltData.idProof || '',
+        notes: cltData.notes || '',
+        profile_image: cltData.profileImage || '',
+        outstanding_payment: 0.00,
+        total_rentals: 0
+      };
+
+      const { data, error } = await supabase
+        .from('clients')
+        .insert(dbData)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error inserting client to Supabase:', error);
+        throw error;
+      }
+
+      if (data) {
+        const newClt: Client = {
+          id: data.id,
+          name: data.name,
+          companyName: data.company_name,
+          gstNumber: data.gstin || '',
+          panNumber: data.pan || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          address: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
+          pincode: data.pincode || '',
+          idProof: data.id_proof || '',
+          status: data.status,
+          notes: data.notes || '',
+          profileImage: data.profile_image || '',
+          documents: ['PAN_Card.pdf', 'GST_Certificate.pdf'],
+          password: data.password || '',
+          rentalHistory: [],
+          paymentHistory: []
+        };
+
+        const updatedClients = [...clients, newClt];
+        setClients(updatedClients);
+        localStorage.setItem('nh_homes_db_v2_clients', JSON.stringify(updatedClients));
+      }
+    } catch (err: any) {
+      console.error('Failed to add client:', err);
+      toast.error(err?.message || 'Database error: Failed to register client.');
+      throw err;
+    }
   };
 
-  const updateClient = (id: string, updatedFields: Partial<Client>) => {
-    const updated = clients.map(clt => clt.id === id ? { ...clt, ...updatedFields } : clt);
-    saveClients(updated);
+  const updateClient = async (id: string, updatedFields: Partial<Client>) => {
+    try {
+      const existingClt = clients.find(clt => clt.id === id);
+      if (!existingClt) throw new Error('Client not found in local state');
+
+      const mergedClt = { ...existingClt, ...updatedFields };
+
+      const dbData = {
+        id: mergedClt.id,
+        name: mergedClt.name,
+        company_name: mergedClt.companyName,
+        email: mergedClt.email,
+        phone: mergedClt.phone,
+        status: mergedClt.status,
+        address: mergedClt.address || '',
+        gstin: mergedClt.gstNumber || '',
+        pan: mergedClt.panNumber || '',
+        client_id: mergedClt.email.split('@')[0],
+        password: mergedClt.password || '',
+        city: mergedClt.city || '',
+        state: mergedClt.state || '',
+        pincode: mergedClt.pincode || '',
+        id_proof: mergedClt.idProof || '',
+        notes: mergedClt.notes || '',
+        profile_image: mergedClt.profileImage || '',
+        outstanding_payment: 0.00,
+        total_rentals: 0
+      };
+
+      const { error } = await supabase
+        .from('clients')
+        .upsert(dbData);
+
+      if (error) {
+        console.error('Error upserting client in Supabase:', error);
+        throw error;
+      }
+
+      const updated = clients.map(clt => clt.id === id ? mergedClt : clt);
+      setClients(updated);
+      localStorage.setItem('nh_homes_db_v2_clients', JSON.stringify(updated));
+    } catch (err: any) {
+      console.error('Failed to update client:', err);
+      toast.error(err?.message || 'Database error: Failed to update client.');
+      throw err;
+    }
   };
 
-  const deleteClient = (id: string) => {
-    const filtered = clients.filter(clt => clt.id !== id);
-    saveClients(filtered);
+  const deleteClient = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting client from Supabase:', error);
+        throw error;
+      }
+
+      const filtered = clients.filter(clt => clt.id !== id);
+      setClients(filtered);
+      localStorage.setItem('nh_homes_db_v2_clients', JSON.stringify(filtered));
+    } catch (err: any) {
+      console.error('Failed to delete client:', err);
+      toast.error(err?.message || 'Database error: Failed to delete client.');
+      throw err;
+    }
   };
 
   // Inventory Actions

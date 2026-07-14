@@ -97,36 +97,40 @@ export const EmployeeManagement: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName || !formUsername || !formPassword || !formEmail) {
       toast.error('All credential fields are required.');
       return;
     }
 
-    addEmployee({
-      name: formName,
-      username: formUsername,
-      email: formEmail,
-      phone: formPhone,
-      role: formRole,
-      department: formDept,
-      address: formAddress,
-      joiningDate: formJoiningDate,
-      status: formStatus,
-      profilePicture: formImage
-    });
+    try {
+      await addEmployee({
+        name: formName,
+        username: formUsername,
+        email: formEmail,
+        phone: formPhone,
+        role: formRole,
+        department: formDept,
+        address: formAddress,
+        joiningDate: formJoiningDate,
+        status: formStatus,
+        profilePicture: formImage
+      });
 
-    logActivity(
-      user?.name || 'Admin',
-      'admin',
-      'Created Employee',
-      'create',
-      `Registered employee ${formName} (ID auto-generated)`
-    );
+      logActivity(
+        user?.name || 'Admin',
+        'admin',
+        'Created Employee',
+        'create',
+        `Registered employee ${formName} (ID auto-generated)`
+      );
 
-    toast.success('Employee account registered successfully!');
-    setIsAddModalOpen(false);
+      toast.success('Employee account registered successfully!');
+      setIsAddModalOpen(false);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   const handleOpenEdit = (emp: Employee) => {
@@ -144,33 +148,37 @@ export const EmployeeManagement: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEmp) return;
 
-    updateEmployee(selectedEmp.id, {
-      name: formName,
-      username: formUsername,
-      email: formEmail,
-      phone: formPhone,
-      role: formRole,
-      department: formDept,
-      address: formAddress,
-      joiningDate: formJoiningDate,
-      status: formStatus,
-      profilePicture: formImage
-    });
+    try {
+      await updateEmployee(selectedEmp.id, {
+        name: formName,
+        username: formUsername,
+        email: formEmail,
+        phone: formPhone,
+        role: formRole,
+        department: formDept,
+        address: formAddress,
+        joiningDate: formJoiningDate,
+        status: formStatus,
+        profilePicture: formImage
+      });
 
-    logActivity(
-      user?.name || 'Admin',
-      'admin',
-      'Updated Employee',
-      'update',
-      `Modified registry for employee ${formName}`
-    );
+      logActivity(
+        user?.name || 'Admin',
+        'admin',
+        'Updated Employee',
+        'update',
+        `Modified registry for employee ${formName}`
+      );
 
-    toast.success('Employee profile updated successfully');
-    setIsEditModalOpen(false);
+      toast.success('Employee profile updated successfully');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   const handleDeleteTrigger = (emp: Employee) => {
@@ -178,21 +186,25 @@ export const EmployeeManagement: React.FC = () => {
     setIsDeleteConfirmOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedEmp) return;
-    deleteEmployee(selectedEmp.id);
-    
-    logActivity(
-      user?.name || 'Admin',
-      'admin',
-      'Deleted Employee',
-      'delete',
-      `Removed employee account ID ${selectedEmp.employeeId}`
-    );
+    try {
+      await deleteEmployee(selectedEmp.id);
+      
+      logActivity(
+        user?.name || 'Admin',
+        'admin',
+        'Deleted Employee',
+        'delete',
+        `Removed employee account ID ${selectedEmp.employeeId}`
+      );
 
-    toast.success('Employee profile deleted successfully');
-    setIsDeleteConfirmOpen(false);
-    setSelectedEmp(null);
+      toast.success('Employee profile deleted successfully');
+      setIsDeleteConfirmOpen(false);
+      setSelectedEmp(null);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   return (

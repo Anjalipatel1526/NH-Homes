@@ -83,35 +83,39 @@ export const ClientManagement: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName || !formCompany || !formPhone || !formEmail) {
       toast.error('Name, Company, Phone, and Email are required.');
       return;
     }
 
-    addClient({
-      name: formName,
-      companyName: formCompany,
-      gstNumber: formGst,
-      panNumber: formPan,
-      phone: formPhone,
-      email: formEmail,
-      address: formAddress,
-      city: formCity,
-      state: formState,
-      pincode: formPincode,
-      idProof: formIdProof,
-      status: formStatus,
-      notes: formNotes,
-      profileImage: formImage,
-      documents: ['PAN_Card.pdf', 'GST_Certificate.pdf'],
-      password: formPassword
-    });
+    try {
+      await addClient({
+        name: formName,
+        companyName: formCompany,
+        gstNumber: formGst,
+        panNumber: formPan,
+        phone: formPhone,
+        email: formEmail,
+        address: formAddress,
+        city: formCity,
+        state: formState,
+        pincode: formPincode,
+        idProof: formIdProof,
+        status: formStatus,
+        notes: formNotes,
+        profileImage: formImage,
+        documents: ['PAN_Card.pdf', 'GST_Certificate.pdf'],
+        password: formPassword
+      });
 
-    logActivity(user?.name || 'Admin', 'admin', 'Created Client', 'create', `Created profile for client ${formName} (${formCompany})`);
-    toast.success('Client profile created successfully');
-    setIsAddModalOpen(false);
+      logActivity(user?.name || 'Admin', 'admin', 'Created Client', 'create', `Created profile for client ${formName} (${formCompany})`);
+      toast.success('Client profile created successfully');
+      setIsAddModalOpen(false);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   const handleOpenEdit = (client: Client) => {
@@ -135,31 +139,35 @@ export const ClientManagement: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedClient) return;
 
-    updateClient(selectedClient.id, {
-      name: formName,
-      companyName: formCompany,
-      gstNumber: formGst,
-      panNumber: formPan,
-      phone: formPhone,
-      email: formEmail,
-      address: formAddress,
-      city: formCity,
-      state: formState,
-      pincode: formPincode,
-      idProof: formIdProof,
-      notes: formNotes,
-      status: formStatus,
-      profileImage: formImage,
-      password: formPassword
-    });
+    try {
+      await updateClient(selectedClient.id, {
+        name: formName,
+        companyName: formCompany,
+        gstNumber: formGst,
+        panNumber: formPan,
+        phone: formPhone,
+        email: formEmail,
+        address: formAddress,
+        city: formCity,
+        state: formState,
+        pincode: formPincode,
+        idProof: formIdProof,
+        notes: formNotes,
+        status: formStatus,
+        profileImage: formImage,
+        password: formPassword
+      });
 
-    logActivity(user?.name || 'Admin', 'admin', 'Updated Client', 'update', `Updated contact details for client ${formName}`);
-    toast.success('Client profile updated successfully');
-    setIsEditModalOpen(false);
+      logActivity(user?.name || 'Admin', 'admin', 'Updated Client', 'update', `Updated contact details for client ${formName}`);
+      toast.success('Client profile updated successfully');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   const handleDeleteTrigger = (client: Client) => {
@@ -167,13 +175,17 @@ export const ClientManagement: React.FC = () => {
     setIsDeleteConfirmOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedClient) return;
-    deleteClient(selectedClient.id);
-    logActivity(user?.name || 'Admin', 'admin', 'Deleted Client', 'delete', `Deleted client profile: ${selectedClient.name}`);
-    toast.success('Client deleted successfully');
-    setIsDeleteConfirmOpen(false);
-    setSelectedClient(null);
+    try {
+      await deleteClient(selectedClient.id);
+      logActivity(user?.name || 'Admin', 'admin', 'Deleted Client', 'delete', `Deleted client profile: ${selectedClient.name}`);
+      toast.success('Client deleted successfully');
+      setIsDeleteConfirmOpen(false);
+      setSelectedClient(null);
+    } catch (err) {
+      // Error handled by context
+    }
   };
 
   return (

@@ -203,18 +203,6 @@ export const RentalCart: React.FC = () => {
                       <span className="text-[9px] uppercase font-bold text-primary block">{item.category}</span>
                       <h4 className="font-extrabold text-brand-text text-sm mt-0.5 leading-tight">{item.name}</h4>
                       <p className="text-[10px] text-brand-dark-grey mt-1">Brand: <strong>{item.brand}</strong> | Model: <strong>{item.model}</strong></p>
-                      
-                      {/* Technical specifications */}
-                      <div className="grid grid-cols-2 gap-2 bg-brand-light-grey p-2 border border-brand-border rounded-lg mt-3 text-[10px]">
-                        <div>
-                          <span className="text-brand-dark-grey">Daily Rate:</span>
-                          <strong className="block text-brand-text">₹{item.rentalPriceDay.toLocaleString('en-IN')}</strong>
-                        </div>
-                        <div>
-                          <span className="text-brand-dark-grey">Deposit:</span>
-                          <strong className="block text-brand-text">₹{item.securityDeposit.toLocaleString('en-IN')}</strong>
-                        </div>
-                      </div>
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-brand-border/40">
@@ -250,7 +238,7 @@ export const RentalCart: React.FC = () => {
                       <div key={item.id} className="flex justify-between items-center gap-3 p-2.5 bg-brand-light-grey rounded-xl border border-brand-border">
                         <div>
                           <span className="font-bold text-brand-text block">{item.name}</span>
-                          <span className="text-[10px] text-brand-dark-grey mt-0.5">Rate: ₹{item.rentalPriceDay.toLocaleString('en-IN')}/day</span>
+                          <span className="text-[10px] text-brand-dark-grey mt-0.5">Brand: {item.brand} | Model: {item.model}</span>
                         </div>
                         <Button variant="ghost" size="sm" className="p-1 text-red-600 hover:text-red-700 shrink-0" onClick={() => removeFromCart(item.id)}>
                           <HiOutlineTrash className="h-4.5 w-4.5" />
@@ -283,26 +271,7 @@ export const RentalCart: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Calculations grid */}
-                  <div className="space-y-2 pt-3 border-t border-brand-border text-[10px] leading-relaxed">
-                    <div className="flex justify-between">
-                      <span className="text-brand-dark-grey">Rent Subtotal ({durationDays} days):</span>
-                      <span className="font-semibold text-brand-text">₹{subtotal.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-brand-dark-grey">Refundable Security Deposit:</span>
-                      <span className="font-semibold text-brand-text">₹{securityDepositTotal.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-brand-dark-grey">Estimated GST (18%):</span>
-                      <span className="font-semibold text-brand-text">₹{estimatedTax.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="h-[1px] bg-brand-border" />
-                    <div className="flex justify-between items-center pt-1 font-bold text-xs">
-                      <span className="text-brand-text">Estimated Total Checkout:</span>
-                      <span className="text-primary font-extrabold text-sm">₹{estimatedGrandTotal.toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
+                  {/* Price display hidden as per client requirements */}
 
                   {/* Submission */}
                   <Button variant="primary" size="lg" className="w-full mt-2" type="submit">

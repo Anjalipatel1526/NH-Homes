@@ -6,7 +6,7 @@ interface AuthContextType {
   role: UserRole | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (username: string, password: string, portal: UserRole, rememberMe: boolean) => Promise<boolean>;
+  login: (username: string, password: string, rememberMe: boolean) => Promise<UserRole | null>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<boolean>;
   changePassword: (old: string, newPass: string) => Promise<boolean>;
@@ -39,50 +39,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const login = async (username: string, password: string, portal: UserRole, rememberMe: boolean) => {
+  const login = async (username: string, password: string, rememberMe: boolean): Promise<UserRole | null> => {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     let authenticatedUser: User | null = null;
+    let detectedRole: UserRole | null = null;
 
-    if (portal === 'admin') {
-      if (
-        (username.toLowerCase() === 'admin@gmail.com' && password === 'admin@123') ||
-        (username.toLowerCase() === 'rohan.m' && password === 'admin123')
-      ) {
-        authenticatedUser = {
-          id: 'user-admin',
-          username: 'rohan.m',
-          email: 'rohan.m@nhhomes.in',
-          role: 'admin',
-          name: 'Admin',
-          profileImage: '',
-          entityId: 'emp-3'
-        };
+    // 1. Try Admin check
+    if (
+      (username.toLowerCase() === 'admin@gmail.com' && password === 'admin@123') ||
+      (username.toLowerCase() === 'rohan.m' && password === 'admin123')
+    ) {
+      authenticatedUser = {
+        id: 'user-admin',
+        username: 'rohan.m',
+        email: 'rohan.m@nhhomes.in',
+        role: 'admin',
+        name: 'Admin',
+        profileImage: '',
+        entityId: 'emp-3'
+      };
+      detectedRole = 'admin';
+    } 
+    // 2. Try Employee check
+    else if (username.toLowerCase() === 'vikram.s' && password === 'employee123') {
+      authenticatedUser = {
+        id: 'user-emp-1',
+        username: 'vikram.s',
+        email: 'vikram.s@nhhomes.in',
+        role: 'employee',
+        name: 'Vikram Singh',
+        profileImage: '',
+        entityId: 'emp-1'
+      };
+      detectedRole = 'employee';
+    } else if (username.toLowerCase() === 'neha.s' && password === 'employee123') {
+      authenticatedUser = {
+        id: 'user-emp-2',
+        username: 'neha.s',
+        email: 'neha.s@nhhomes.in',
+        role: 'employee',
+        name: 'Neha Sharma',
+        profileImage: '',
+        entityId: 'emp-2'
+      };
+      detectedRole = 'employee';
+    } else {
+      // Try dynamic employee check
+      const localEmployees = localStorage.getItem('nh_homes_db_v2_employees');
+      if (localEmployees) {
+        const employeesList = JSON.parse(localEmployees);
+        const matchedEmployee = employeesList.find(
+          (e: any) =>
+            (e.email.toLowerCase() === username.toLowerCase() || e.username.toLowerCase() === username.toLowerCase())
+        );
+        // Default to employee123 as placeholder password
+        if (matchedEmployee && password === 'employee123') {
+          authenticatedUser = {
+            id: `user-${matchedEmployee.id}`,
+            username: matchedEmployee.username,
+            email: matchedEmployee.email,
+            role: 'employee',
+            name: matchedEmployee.name,
+            profileImage: matchedEmployee.profilePicture,
+            entityId: matchedEmployee.id
+          };
+          detectedRole = 'employee';
+        }
       }
-    } else if (portal === 'employee') {
-      if (username.toLowerCase() === 'vikram.s' && password === 'employee123') {
-        authenticatedUser = {
-          id: 'user-emp-1',
-          username: 'vikram.s',
-          email: 'vikram.s@nhhomes.in',
-          role: 'employee',
-          name: 'Vikram Singh',
-          profileImage: '',
-          entityId: 'emp-1'
-        };
-      } else if (username.toLowerCase() === 'neha.s' && password === 'employee123') {
-        authenticatedUser = {
-          id: 'user-emp-2',
-          username: 'neha.s',
-          email: 'neha.s@nhhomes.in',
-          role: 'employee',
-          name: 'Neha Sharma',
-          profileImage: '',
-          entityId: 'emp-2'
-        };
-      }
-    } else if (portal === 'client') {
+    }
+
+    // 3. Try Client check
+    if (!authenticatedUser) {
       if (username.toLowerCase() === 'amit.patel' && password === 'client123') {
         authenticatedUser = {
           id: 'user-clt-1',
@@ -93,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileImage: '',
           entityId: 'clt-1'
         };
+        detectedRole = 'client';
       } else if (username.toLowerCase() === 'rajesh' && password === 'client123') {
         authenticatedUser = {
           id: 'user-clt-2',
@@ -103,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileImage: '',
           entityId: 'clt-2'
         };
+        detectedRole = 'client';
       } else {
         const localClients = localStorage.getItem('nh_homes_db_v2_clients');
         if (localClients) {
@@ -120,14 +151,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               profileImage: matchedClient.profileImage,
               entityId: matchedClient.id
             };
+            detectedRole = 'client';
           }
         }
       }
     }
 
-    if (authenticatedUser) {
+    if (authenticatedUser && detectedRole) {
       setUser(authenticatedUser);
-      setRole(portal);
+      setRole(detectedRole);
       setIsAuthenticated(true);
 
       const fakeJwtToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(authenticatedUser))}.nh-homes-secret`;
@@ -135,16 +167,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (rememberMe) {
         localStorage.setItem('nh_homes_auth_token', fakeJwtToken);
         localStorage.setItem('nh_homes_user', JSON.stringify(authenticatedUser));
-        localStorage.setItem('nh_homes_role', portal);
+        localStorage.setItem('nh_homes_role', detectedRole);
       } else {
         sessionStorage.setItem('nh_homes_auth_token', fakeJwtToken);
         sessionStorage.setItem('nh_homes_user', JSON.stringify(authenticatedUser));
-        sessionStorage.setItem('nh_homes_role', portal);
+        sessionStorage.setItem('nh_homes_role', detectedRole);
       }
-      return true;
+      return detectedRole;
     }
 
-    return false;
+    return null;
   };
 
   const logout = () => {
