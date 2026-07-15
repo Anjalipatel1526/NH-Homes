@@ -62,9 +62,16 @@ export const InventoryManagement: React.FC = () => {
 
   // Filtering Logic
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.equipmentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.brand.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchTerms = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+    const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => {
+      return (item.name?.toLowerCase().includes(term) ||
+              item.equipmentId?.toLowerCase().includes(term) ||
+              item.brand?.toLowerCase().includes(term) ||
+              item.model?.toLowerCase().includes(term) ||
+              item.serialNumber?.toLowerCase().includes(term) ||
+              item.category?.toLowerCase().includes(term) ||
+              item.currentLocation?.toLowerCase().includes(term));
+    });
     const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
     const matchesStatus = filterStatus === 'All' || item.status === filterStatus;
     
@@ -594,7 +601,27 @@ export const InventoryManagement: React.FC = () => {
                 <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Security Deposit</span>
                 <p className="font-extrabold text-brand-text text-sm mt-0.5">₹{selectedItem.securityDeposit.toLocaleString('en-IN')}</p>
               </div>
+              {role !== 'client' && (
+                <>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Purchase Date</span>
+                    <p className="font-bold text-brand-text text-xs mt-0.5">{selectedItem.purchaseDate || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Purchase Price</span>
+                    <p className="font-bold text-brand-text text-xs mt-0.5">₹{(selectedItem.purchasePrice || 0).toLocaleString('en-IN')}</p>
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Description */}
+            {selectedItem.description && (
+              <div className="border border-brand-border rounded-xl p-4 space-y-1">
+                <span className="font-bold text-brand-text text-xs block">Asset Description</span>
+                <p className="text-brand-dark-grey text-xs leading-relaxed">{selectedItem.description}</p>
+              </div>
+            )}
 
             {/* Barcode & QR Code simulation */}
             <div className="border border-brand-border rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-6">

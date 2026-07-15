@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { toast } from 'react-toastify';
+import { jsPDF } from 'jspdf';
 import {
   HiOutlineDocumentText,
   HiOutlineArrowDownTray,
@@ -33,10 +34,102 @@ export const Reports: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // Excel Generator Utility (Excel-compatible XML/HTML Spreadsheet)
+  const downloadExcel = (headers: string[], rows: string[][], filename: string) => {
+    let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`;
+    html += `<head><meta charset="utf-8"/><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sheet 1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>`;
+    html += `<body><table border="1">`;
+    
+    // Headers
+    html += `<tr>`;
+    headers.forEach(h => {
+      html += `<th style="background-color: #ffe7d3; font-weight: bold;">${h}</th>`;
+    });
+    html += `</tr>`;
+    
+    // Rows
+    rows.forEach(row => {
+      html += `<tr>`;
+      row.forEach(cell => {
+        html += `<td>${cell}</td>`;
+      });
+      html += `</tr>`;
+    });
+    
+    html += `</table></body></html>`;
+    
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // PDF Generator Utility
+  const downloadPDF = (headers: string[], rows: string[][], filename: string) => {
+    const doc = new jsPDF();
+    
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("NH Homes Civil Equipment Rental", 14, 20);
+    
+    doc.setFontSize(12);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Report: ${filename.replace(/_/g, ' ')}`, 14, 28);
+    doc.text(`Date Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 34);
+    
+    doc.setLineWidth(0.5);
+    doc.line(14, 38, 196, 38);
+    
+    let y = 46;
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(9);
+    
+    const colWidth = 182 / headers.length;
+    headers.forEach((h, i) => {
+      doc.text(h, 14 + (i * colWidth), y);
+    });
+    
+    y += 6;
+    doc.line(14, y - 2, 196, y - 2);
+    
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(8);
+    
+    rows.forEach((row) => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(9);
+        headers.forEach((h, i) => {
+          doc.text(h, 14 + (i * colWidth), y);
+        });
+        y += 6;
+        doc.line(14, y - 2, 196, y - 2);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8);
+      }
+      
+      row.forEach((cell, i) => {
+        const val = String(cell || '');
+        const maxChars = Math.max(10, Math.floor(colWidth / 1.5));
+        const text = val.length > maxChars ? val.substring(0, maxChars - 2) + ".." : val;
+        doc.text(text, 14 + (i * colWidth), y);
+      });
+      y += 6;
+    });
+    
+    doc.save(`${filename}.pdf`);
+  };
+
   const handleExport = (format: 'PDF' | 'Excel' | 'CSV') => {
     toast.info(`Preparing ${reportType} report in ${format} format...`);
     
-    // Generate CSV data based on active report type
+    // Generate data based on active report type
     let headers: string[] = [];
     let rows: string[][] = [];
     
@@ -46,11 +139,11 @@ export const Reports: React.FC = () => {
         r.invoiceNumber,
         r.clientName,
         r.invoiceDate || '',
-        r.gstTotal.toString(),
-        r.discountTotal.toString(),
-        r.grandTotal.toString(),
-        r.amountPaid.toString(),
-        (r.grandTotal - r.amountPaid).toString()
+        `INR ${r.gstTotal}`,
+        `INR ${r.discountTotal}`,
+        `INR ${r.grandTotal}`,
+        `INR ${r.amountPaid}`,
+        `INR ${r.grandTotal - r.amountPaid}`
       ]);
     } else if (reportType === 'inventory') {
       headers = ['Equipment ID', 'Asset Name', 'Category', 'Brand & Model', 'Status', 'Daily Rate', 'Purchase Price', 'Location'];
@@ -60,8 +153,8 @@ export const Reports: React.FC = () => {
         i.category,
         `${i.brand} ${i.model}`,
         i.status,
-        i.rentalPriceDay.toString(),
-        i.purchasePrice.toString(),
+        `INR ${i.rentalPriceDay}`,
+        `INR ${i.purchasePrice}`,
         i.currentLocation
       ]);
     } else if (reportType === 'rentals') {
@@ -73,7 +166,7 @@ export const Reports: React.FC = () => {
         r.startDate,
         r.expectedReturnDate,
         r.items.length.toString(),
-        r.grandTotal.toString(),
+        `INR ${r.grandTotal}`,
         r.status
       ]);
     } else if (reportType === 'clients') {
@@ -82,10 +175,10 @@ export const Reports: React.FC = () => {
         c.id,
         c.name,
         c.companyName,
-        c.gstNumber,
+        c.gstNumber || 'N/A',
         c.phone,
         c.email,
-        c.city,
+        c.city || 'N/A',
         c.status
       ]);
     } else if (reportType === 'maintenance') {
@@ -105,14 +198,17 @@ export const Reports: React.FC = () => {
       });
     }
 
-    if (format === 'CSV' || format === 'Excel') {
-      downloadCSV(headers, rows, `NH_Homes_${reportType}_Report_${Date.now()}`);
+    const filename = `NH_Homes_${reportType}_Report_${Date.now()}`;
+
+    if (format === 'CSV') {
+      downloadCSV(headers, rows, filename);
       toast.success(`${reportType} CSV exported successfully!`);
-    } else {
-      // PDF simulation
-      setTimeout(() => {
-        toast.success(`PDF report compiled and sent to your downloads!`);
-      }, 1000);
+    } else if (format === 'Excel') {
+      downloadExcel(headers, rows, filename);
+      toast.success(`${reportType} Excel exported successfully!`);
+    } else if (format === 'PDF') {
+      downloadPDF(headers, rows, filename);
+      toast.success(`${reportType} PDF compiled and downloaded successfully!`);
     }
   };
 

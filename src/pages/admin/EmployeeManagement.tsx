@@ -74,9 +74,15 @@ export const EmployeeManagement: React.FC = () => {
 
   // Filtering Logic
   const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          emp.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchTerms = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+    const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => {
+      return (emp.name?.toLowerCase().includes(term) ||
+              emp.employeeId?.toLowerCase().includes(term) ||
+              emp.email?.toLowerCase().includes(term) ||
+              emp.phone?.toLowerCase().includes(term) ||
+              emp.address?.toLowerCase().includes(term) ||
+              emp.department?.toLowerCase().includes(term));
+    });
     const matchesDept = filterDept === 'All' || emp.department === filterDept;
     
     return matchesSearch && matchesDept;
@@ -444,6 +450,26 @@ export const EmployeeManagement: React.FC = () => {
               <div>
                 <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Email Address</span>
                 <p className="font-bold text-brand-text mt-0.5">{selectedEmp.email}</p>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Login Username</span>
+                <p className="font-bold text-brand-text mt-0.5">{selectedEmp.username || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Monthly Salary</span>
+                <p className="font-bold text-brand-text mt-0.5">₹{(selectedEmp.salary || 0).toLocaleString('en-IN')}</p>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Performance Rating</span>
+                <p className="font-bold text-brand-text mt-0.5">★ {selectedEmp.rating || '5.0'}</p>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Tasks Completed</span>
+                <p className="font-bold text-brand-text mt-0.5">{selectedEmp.tasksCompleted || 0} tasks</p>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Efficiency Rate</span>
+                <p className="font-bold text-brand-text mt-0.5">{selectedEmp.efficiency || 100}%</p>
               </div>
               <div className="col-span-2">
                 <span className="text-[10px] uppercase font-bold text-brand-dark-grey">Registered Address</span>

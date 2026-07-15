@@ -121,6 +121,8 @@ export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [chartRange, setChartRange] = useState<'Daily' | 'Monthly' | 'Yearly'>('Monthly');
   const [selectedLogId, setSelectedLogId] = useState<string | null>(activityLogs[0]?.id || null);
+  const [logsSearchTerm, setLogsSearchTerm] = useState('');
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Dynamic calculations from context
   const totalRevenue = rentalRequests
@@ -164,7 +166,16 @@ export const AdminDashboard: React.FC = () => {
     ]
   };
 
-  const selectedLog = activityLogs.find(log => log.id === selectedLogId) || activityLogs[0];
+  const filteredLogs = activityLogs.filter(log => {
+    const term = logsSearchTerm.toLowerCase();
+    return log.user?.toLowerCase().includes(term) ||
+           log.action?.toLowerCase().includes(term) ||
+           log.details?.toLowerCase().includes(term) ||
+           log.role?.toLowerCase().includes(term) ||
+           log.type?.toLowerCase().includes(term);
+  });
+
+  const selectedLog = filteredLogs.find(log => log.id === selectedLogId) || filteredLogs[0] || activityLogs[0];
 
   // System Load progress bars mapped to actual inventory rates
   const rentedRate = Math.round((rentedInvCount / (totalInvCount || 1)) * 100);
@@ -235,7 +246,36 @@ export const AdminDashboard: React.FC = () => {
                     <div className="p-3 bg-orange-100 rounded-2xl text-primary border border-orange-200/50">
                       <Zap className="h-6 w-6" />
                     </div>
-                    <button className="text-stone-400 hover:text-stone-600"><MoreVertical className="h-5 w-5" /></button>
+                    <div className="relative">
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === 'revenue' ? null : 'revenue')}
+                        className="text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                      {activeMenuId === 'revenue' && (
+                        <div className="absolute right-0 mt-2 w-40 rounded-xl bg-white border border-stone-200 shadow-lg py-1.5 z-20 text-xs font-semibold text-stone-700">
+                          <button 
+                            onClick={() => {
+                              toast.success('Refreshing billing metrics...');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Refresh Metrics
+                          </button>
+                          <button 
+                            onClick={() => {
+                              navigate('/admin/reports');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Go to Reports
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-stone-500 mb-1 uppercase tracking-wider">Total Rental Billings</p>
@@ -429,7 +469,36 @@ export const AdminDashboard: React.FC = () => {
                       <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wider">NH Monthly Acquisitions</h3>
                       <p className="text-xs text-stone-400 font-medium">New Customer Profiles Registered</p>
                     </div>
-                    <button className="text-stone-400 hover:text-stone-600"><MoreVertical className="h-5 w-5" /></button>
+                    <div className="relative">
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === 'acquisitions' ? null : 'acquisitions')}
+                        className="text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                      {activeMenuId === 'acquisitions' && (
+                        <div className="absolute right-0 mt-2 w-40 rounded-xl bg-white border border-stone-200 shadow-lg py-1.5 z-20 text-xs font-semibold text-stone-700">
+                          <button 
+                            onClick={() => {
+                              toast.success('Refreshing acquisitions trend...');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Refresh Chart
+                          </button>
+                          <button 
+                            onClick={() => {
+                              navigate('/admin/clients');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Manage Clients
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 w-full min-h-0 text-xs">
                     <ResponsiveContainer width="100%" height="100%">
@@ -459,7 +528,36 @@ export const AdminDashboard: React.FC = () => {
                       <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wider">Depot Inventory Share</h3>
                       <p className="text-xs text-stone-400 font-medium">Category distribution overview</p>
                     </div>
-                    <button className="text-stone-400 hover:text-stone-600"><MoreVertical className="h-5 w-5" /></button>
+                    <div className="relative">
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === 'inventory_share' ? null : 'inventory_share')}
+                        className="text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                      {activeMenuId === 'inventory_share' && (
+                        <div className="absolute right-0 mt-2 w-40 rounded-xl bg-white border border-stone-200 shadow-lg py-1.5 z-20 text-xs font-semibold text-stone-700">
+                          <button 
+                            onClick={() => {
+                              toast.success('Recalculating inventory share...');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Recalculate
+                          </button>
+                          <button 
+                            onClick={() => {
+                              navigate('/admin/inventory');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-stone-50"
+                          >
+                            Manage Inventory
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 flex flex-col justify-center gap-5">
                     {[
@@ -529,11 +627,13 @@ export const AdminDashboard: React.FC = () => {
                     <input 
                       type="text" 
                       placeholder="Filter audit entries..." 
-                      className="bg-transparent border-none outline-none text-xs w-full text-stone-700 font-medium" 
+                      className="bg-transparent border-none outline-none text-xs w-full text-stone-700 font-medium"
+                      value={logsSearchTerm}
+                      onChange={e => setLogsSearchTerm(e.target.value)}
                     />
                   </div>
                   <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[460px]">
-                    {activityLogs.map((log) => (
+                    {filteredLogs.map((log) => (
                       <div 
                         key={log.id} 
                         onClick={() => setSelectedLogId(log.id)}
@@ -552,6 +652,9 @@ export const AdminDashboard: React.FC = () => {
                         <p className="text-[10px] text-stone-400 font-medium line-clamp-1">{log.details}</p>
                       </div>
                     ))}
+                    {filteredLogs.length === 0 && (
+                      <div className="text-center py-8 text-stone-400 font-medium">No matching audit logs found.</div>
+                    )}
                   </div>
                 </FrostCard>
 

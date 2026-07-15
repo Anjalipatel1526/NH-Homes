@@ -187,7 +187,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: e.id, employeeId: e.employee_id || '', name: e.name, username: e.username || '',
           email: e.email, phone: e.phone, role: e.role, department: e.department || '',
           profilePicture: e.profile_picture || e.avatar || '', address: e.address || '',
-          joiningDate: e.joining_date, status: e.status
+          joiningDate: e.joining_date, status: e.status,
+          salary: e.salary ? Number(e.salary) : 0,
+          rating: e.rating ? Number(e.rating) : 5.0,
+          tasksCompleted: e.tasks_completed ? Number(e.tasks_completed) : 0,
+          efficiency: e.efficiency ? Number(e.efficiency) : 100
         }));
         setEmployees(mapped);
         localStorage.setItem('nh_homes_db_v2_employees', JSON.stringify(mapped));
@@ -318,13 +322,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const nextIdNum = employees.length + 1;
       const employeeId = `EMP-${nextIdNum.toString().padStart(3, '0')}`;
       const empId = `emp-${Date.now()}`;
-      const newEmp: Employee = { ...empData, id: empId, employeeId, status: 'Active' };
+      const newEmp: Employee = { 
+        ...empData, 
+        id: empId, 
+        employeeId, 
+        status: 'Active',
+        salary: empData.salary || 0,
+        rating: empData.rating || 5.0,
+        tasksCompleted: empData.tasksCompleted || 0,
+        efficiency: empData.efficiency || 100
+      };
 
       const { error } = await supabase.from('employees').insert({
         id: empId, employee_id: employeeId, name: empData.name, username: empData.username || '',
         role: empData.role, department: empData.department || '', email: empData.email,
         phone: empData.phone, status: 'Active', joining_date: empData.joiningDate,
-        profile_picture: empData.profilePicture || '', address: empData.address || ''
+        profile_picture: empData.profilePicture || '', address: empData.address || '',
+        salary: empData.salary || 0, rating: empData.rating || 5.0,
+        tasks_completed: empData.tasksCompleted || 0, efficiency: empData.efficiency || 100
       });
       if (error) { console.error('Error inserting employee:', error); throw error; }
 
@@ -348,6 +363,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (updatedFields.profilePicture !== undefined) dbFields.profile_picture = updatedFields.profilePicture;
       if (updatedFields.address !== undefined) dbFields.address = updatedFields.address;
       if (updatedFields.username !== undefined) dbFields.username = updatedFields.username;
+      if (updatedFields.salary !== undefined) dbFields.salary = updatedFields.salary;
+      if (updatedFields.rating !== undefined) dbFields.rating = updatedFields.rating;
+      if (updatedFields.tasksCompleted !== undefined) dbFields.tasks_completed = updatedFields.tasksCompleted;
+      if (updatedFields.efficiency !== undefined) dbFields.efficiency = updatedFields.efficiency;
 
       const { error } = await supabase.from('employees').update(dbFields).eq('id', id);
       if (error) { console.error('Error updating employee:', error); throw error; }

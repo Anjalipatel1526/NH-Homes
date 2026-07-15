@@ -23,6 +23,10 @@ export interface Employee {
   address: string;
   joiningDate: string;
   status: 'Active' | 'Inactive';
+  salary?: number;
+  rating?: number;
+  tasksCompleted?: number;
+  efficiency?: number;
 }
 
 export interface Client {
