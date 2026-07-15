@@ -114,7 +114,7 @@ export const ClientManagement: React.FC = () => {
       toast.success('Client profile created successfully');
       setIsAddModalOpen(false);
     } catch (err) {
-      // Error handled by context
+      // Error toast is shown by addClient
     }
   };
 
@@ -300,7 +300,7 @@ export const ClientManagement: React.FC = () => {
 
       {/* Add Client Modal */}
       <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Register Corporate Client" size="lg">
-        <form onSubmit={handleAddSubmit} className="space-y-4 text-left text-xs">
+        <form onSubmit={handleAddSubmit} className="space-y-4 text-left text-xs" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Client Representative Name *" placeholder="Amit Patel" required value={formName} onChange={e => setFormName(e.target.value)} />
             <Input label="Company Name *" placeholder="L&T Construction Projects" required value={formCompany} onChange={e => setFormCompany(e.target.value)} />
@@ -310,14 +310,23 @@ export const ClientManagement: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input label="Phone Number *" placeholder="+91 99887 76655" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
-            <Input label="Email Address *" type="email" placeholder="amit.patel@lntecc.com" required value={formEmail} onChange={e => setFormEmail(e.target.value)} />
+            <Input
+              label="Email Address *"
+              type="email"
+              placeholder=""
+              required
+              value={formEmail}
+              onChange={e => setFormEmail(e.target.value)}
+              autoComplete="new-password"
+            />
             <Input
               label="Account Password *"
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
+              placeholder=""
               required
               value={formPassword}
               onChange={e => setFormPassword(e.target.value)}
+              autoComplete="new-password"
               rightIcon={
                 <button
                   type="button"
@@ -353,7 +362,7 @@ export const ClientManagement: React.FC = () => {
 
       {/* Edit Client Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Modify Client Profile" size="lg">
-        <form onSubmit={handleEditSubmit} className="space-y-4 text-left text-xs">
+        <form onSubmit={handleEditSubmit} className="space-y-4 text-left text-xs" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Client Representative Name *" required value={formName} onChange={e => setFormName(e.target.value)} />
             <Input label="Company Name *" required value={formCompany} onChange={e => setFormCompany(e.target.value)} />
@@ -363,13 +372,21 @@ export const ClientManagement: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input label="Phone Number *" required value={formPhone} onChange={e => setFormPhone(e.target.value)} />
-            <Input label="Email Address *" type="email" required value={formEmail} onChange={e => setFormEmail(e.target.value)} />
+            <Input
+              label="Email Address *"
+              type="email"
+              required
+              value={formEmail}
+              onChange={e => setFormEmail(e.target.value)}
+              autoComplete="new-password"
+            />
             <Input
               label="Account Password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
+              placeholder=""
               value={formPassword}
               onChange={e => setFormPassword(e.target.value)}
+              autoComplete="new-password"
               rightIcon={
                 <button
                   type="button"
