@@ -3,6 +3,16 @@
 -- Run this in Supabase SQL Editor if tables already exist
 -- ============================================================
 
+-- Fix UUID vs TEXT mismatch for rental_requests and rental_request_items
+ALTER TABLE rental_request_items DROP CONSTRAINT IF EXISTS rental_request_items_rental_request_id_fkey;
+ALTER TABLE rental_requests ALTER COLUMN id TYPE TEXT;
+ALTER TABLE rental_request_items ALTER COLUMN rental_request_id TYPE TEXT;
+ALTER TABLE rental_request_items 
+  ADD CONSTRAINT rental_request_items_rental_request_id_fkey 
+  FOREIGN KEY (rental_request_id) 
+  REFERENCES rental_requests(id) 
+  ON DELETE CASCADE;
+
 -- Add missing columns to employees (if not present)
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS employee_id TEXT UNIQUE;
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS username TEXT;
