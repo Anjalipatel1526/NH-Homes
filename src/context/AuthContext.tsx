@@ -11,6 +11,7 @@ interface AuthContextType {
   logout: () => void;
   forgotPassword: (email: string) => Promise<boolean>;
   changePassword: (old: string, newPass: string) => Promise<boolean>;
+  updateProfileImage: (url: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -295,8 +296,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  const updateProfileImage = async (imageUrl: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      if (role === 'client') {
+        const { error } = await supabase
+          .from('clients')
+          .update({ profile_image: imageUrl })
+          .eq('id', user.entityId);
+        if (error) throw error;
+      } else {
+        // employee or admin
+        const { error } = await supabase
+          .from('employees')
+          .update({ profile_picture: imageUrl })
+          .eq('id', user.entityId);
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error('Failed to update profile image in Supabase:', err);
+    }
+
+    const updatedUser = { ...user, profileImage: imageUrl };
+    setUser(updatedUser);
+
+    if (localStorage.getItem('nh_homes_user')) {
+      localStorage.setItem('nh_homes_user', JSON.stringify(updatedUser));
+    } else if (sessionStorage.getItem('nh_homes_user')) {
+      sessionStorage.setItem('nh_homes_user', JSON.stringify(updatedUser));
+    }
+
+    return true;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, role, isAuthenticated, loading, login, logout, forgotPassword, changePassword }}>
+    <AuthContext.Provider value={{ user, role, isAuthenticated, loading, login, logout, forgotPassword, changePassword, updateProfileImage }}>
       {children}
     </AuthContext.Provider>
   );

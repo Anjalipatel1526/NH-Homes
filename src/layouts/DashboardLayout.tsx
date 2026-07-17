@@ -23,7 +23,8 @@ import {
   Bell,
   Search,
   Clock,
-  ShoppingCart
+  ShoppingCart,
+  Camera
 } from 'lucide-react';
 import {
   HiOutlineBars3,
@@ -32,8 +33,8 @@ import {
 } from 'react-icons/hi2';
 
 export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { user, role, logout, changePassword } = useAuth();
-  const { clients, employees, inventory, rentalRequests } = useData();
+  const { user, role, logout, changePassword, updateProfileImage } = useAuth();
+  const { clients, employees, inventory, rentalRequests, updateEmployee, updateClient } = useData();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +53,47 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Profile image change state & handlers
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const handleProfileImageChange = async (url: string) => {
+    if (!url) {
+      toast.error('Please enter a valid URL or select an image');
+      return;
+    }
+    const success = await updateProfileImage(url);
+    if (success) {
+      if (user?.entityId) {
+        if (role === 'client') {
+          updateClient(user.entityId, { profileImage: url });
+        } else {
+          updateEmployee(user.entityId, { profilePicture: url });
+        }
+      }
+      toast.success('Profile picture updated successfully!');
+      setImageUrlInput('');
+    } else {
+      toast.error('Failed to update profile picture');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size exceeds 5MB limit');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          handleProfileImageChange(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
@@ -631,7 +673,18 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
       {/* Modal: My Profile Details */}
       <Modal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} title="Account Profile Details" size="md">
         <div className="flex flex-col items-center text-center space-y-4">
-          <Avatar name={user?.name || 'User'} src={user?.profileImage} size="xl" />
+          <div className="relative group">
+            <Avatar name={user?.name || 'User'} src={user?.profileImage} size="xl" />
+            <label className="absolute bottom-0 right-0 p-2 bg-primary hover:bg-orange-600 text-white rounded-full cursor-pointer shadow-md hover:scale-105 transition-transform flex items-center justify-center border-2 border-white">
+              <Camera className="h-3.5 w-3.5" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
           <div>
             <h3 className="font-bold text-base text-stone-850">{user?.name}</h3>
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{role} Portal Account</p>
@@ -653,6 +706,26 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
             <div className="flex justify-between">
               <span className="text-stone-400">Associated Entity ID:</span>
               <span className="text-stone-850 font-mono text-[10px]">{user?.entityId || 'N/A'}</span>
+            </div>
+          </div>
+
+          <div className="w-full space-y-1.5 text-left border-t border-stone-100 pt-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Or Update via Image URL</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="https://example.com/image.png"
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                className="flex-1 px-3 py-2 border border-stone-200 bg-stone-50 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white"
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleProfileImageChange(imageUrlInput)}
+              >
+                Apply URL
+              </Button>
             </div>
           </div>
 
